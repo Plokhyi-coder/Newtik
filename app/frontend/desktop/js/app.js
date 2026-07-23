@@ -15,6 +15,7 @@ function showScreen(id) {
   const newIndex = screens.indexOf(id);
   const direction = newIndex >= currentScreenIndex ? "enter-forward" : "enter-back";
   currentScreenIndex = newIndex;
+  Sound.transition(document.documentElement.getAttribute("data-style"));
 
   for (const s of screens) {
     const el = document.getElementById(s);

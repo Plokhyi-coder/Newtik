@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.api import routes_job, routes_project, routes_results, ws_progress
@@ -39,6 +40,11 @@ def create_app() -> FastAPI:
     app.include_router(routes_job.router)
     app.include_router(routes_results.router)
     app.include_router(ws_progress.router)
+
+    @app.get("/favicon.ico", include_in_schema=False)
+    async def favicon() -> RedirectResponse:
+        # Browsers probe this path directly regardless of the <link rel="icon"> tag.
+        return RedirectResponse(url="/assets/favicon.svg")
 
     app.mount("/shared", StaticFiles(directory=str(FRONTEND_SHARED_DIR)), name="shared")
     app.mount("/", StaticFiles(directory=str(FRONTEND_DESKTOP_DIR), html=True), name="desktop")

@@ -123,6 +123,43 @@ body::before, body::after { content: ""; position: fixed; inset: 0; pointer-even
   margin: 0 auto;
   padding: 32px 24px 64px;
   position: relative;
+  z-index: 1;
+}
+
+/* ==========================================================================
+   Ambient particle layer (js/particles.js) - sits behind #app so falling
+   leaves / digital rain / pixel sparks only ever show in the empty margin
+   around the card, never over text or controls.
+   ========================================================================== */
+#particle-layer {
+  position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+}
+.particle { position: absolute; top: -40px; will-change: transform, opacity; }
+
+.particle-leaf { animation: leaf-fall var(--fall-duration, 12s) linear forwards; }
+@keyframes leaf-fall {
+  0% { transform: translateY(-40px) translateX(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.85; }
+  90% { opacity: 0.75; }
+  100% { transform: translateY(105vh) translateX(var(--drift, 80px)) rotate(var(--spin, 300deg)); opacity: 0; }
+}
+
+.particle-spark { animation: spark-rise var(--fall-duration, 5s) ease-out forwards; }
+@keyframes spark-rise {
+  0% { transform: translateY(10vh) scale(0.5) rotate(0deg); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translateY(-95vh) scale(1.15) rotate(70deg); opacity: 0; }
+}
+
+.particle-matrix-col {
+  position: absolute; top: -100%; writing-mode: vertical-rl;
+  font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.2;
+  color: var(--accent); opacity: 0.3; text-shadow: 0 0 6px var(--accent);
+  animation-name: matrix-fall; animation-timing-function: linear; animation-iteration-count: infinite;
+}
+@keyframes matrix-fall {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(200%); }
 }
 
 header.top-bar {
@@ -170,11 +207,63 @@ header.top-bar .logo span { color: var(--accent); }
 .steps .dot.done { background: var(--accent-2); }
 
 .screen {
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 28px;
   transition: background 0.4s ease, border-color 0.4s ease, border-radius 0.4s ease;
+}
+
+/* Thematic corner flourishes - decorative only (pointer-events: none), each
+   style targets its own image so switching styles swaps art, not just color. */
+.screen::before, .screen::after, .settings-panel::before, .settings-panel::after {
+  content: ""; position: absolute; width: 64px; height: 64px;
+  pointer-events: none; background-repeat: no-repeat; background-size: contain;
+  display: none; z-index: 2;
+}
+
+:root[data-style="forest"] .screen::before, :root[data-style="forest"] .settings-panel::before {
+  display: block; top: -40px; left: 22px; width: 46px; height: 62px;
+  background-image: url("/assets/vine-corner.svg");
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+}
+:root[data-style="forest"] .screen::after, :root[data-style="forest"] .settings-panel::after {
+  display: block; top: -40px; right: 22px; width: 46px; height: 62px;
+  background-image: url("/assets/vine-corner.svg");
+  transform: scaleX(-1);
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+}
+
+:root[data-style="cyberpunk"] .screen::before, :root[data-style="cyberpunk"] .settings-panel::before {
+  display: block; top: -2px; left: -2px; width: 44px; height: 44px;
+  background-image: url("/assets/circuit-corner.svg");
+}
+:root[data-style="cyberpunk"] .screen::after, :root[data-style="cyberpunk"] .settings-panel::after {
+  display: block; top: -2px; right: -2px; width: 44px; height: 44px;
+  background-image: url("/assets/circuit-corner.svg");
+  transform: scaleX(-1);
+}
+
+:root[data-style="arcade"] .screen::before, :root[data-style="arcade"] .settings-panel::before {
+  display: block; top: -3px; left: -3px; width: 22px; height: 22px;
+  background-image: url("/assets/pixel-bracket.svg");
+  image-rendering: pixelated;
+}
+:root[data-style="arcade"] .screen::after, :root[data-style="arcade"] .settings-panel::after {
+  display: block; top: -3px; right: -3px; width: 22px; height: 22px;
+  background-image: url("/assets/pixel-bracket.svg");
+  image-rendering: pixelated;
+  transform: scaleX(-1);
+}
+
+:root[data-style="cyberpunk"] header.top-bar .logo span { animation: glitch-flicker 6s infinite; }
+@keyframes glitch-flicker {
+  0%, 92%, 100% { opacity: 1; transform: none; text-shadow: 0 0 10px var(--accent); }
+  93% { opacity: 0.6; transform: translateX(-1px); text-shadow: 2px 0 #ff2ec4, -2px 0 #28e0ff; }
+  95% { opacity: 1; transform: translateX(1px); text-shadow: 0 0 10px var(--accent); }
+  96% { opacity: 0.7; transform: translateX(-1px); }
+  97% { opacity: 1; transform: none; }
 }
 
 .screen.hidden { display: none; }
@@ -366,6 +455,7 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-gl
 @keyframes overlay-in { from { opacity: 0; } to { opacity: 1; } }
 
 .settings-panel {
+  position: relative;
   width: 420px; max-width: calc(100vw - 32px);
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   padding: 24px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
@@ -396,7 +486,7 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-gl
   padding: 12px; cursor: pointer; font-size: 13px; color: var(--muted);
   transition: all 0.15s ease;
 }
-.style-card .icon { font-size: 18px; }
+.style-card .icon { width: 20px; height: 20px; flex-shrink: 0; }
 .style-card:hover { border-color: var(--accent); color: var(--text); }
 .style-card.selected { border-color: var(--accent); background: var(--accent-glow); color: var(--text); }
 

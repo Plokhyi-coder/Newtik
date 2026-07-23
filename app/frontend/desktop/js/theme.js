@@ -13,10 +13,10 @@ const THEME_COLORS = [
 ];
 
 const VISUAL_STYLES = [
-  { id: "cyberpunk", label: "Киберпанк", icon: "⚡" },
-  { id: "forest", label: "Лесной", icon: "🌲" },
-  { id: "minimal", label: "Минимал", icon: "◻" },
-  { id: "arcade", label: "Ретро-аркада", icon: "▮" },
+  { id: "cyberpunk", label: "Киберпанк", icon: "/assets/icon-cyberpunk.svg" },
+  { id: "forest", label: "Лесной", icon: "/assets/icon-forest.svg" },
+  { id: "minimal", label: "Минимал", icon: "/assets/icon-minimal.svg" },
+  { id: "arcade", label: "Ретро-аркада", icon: "/assets/icon-arcade.svg" },
 ];
 
 const ThemeManager = (() => {
@@ -79,9 +79,10 @@ function initSettingsPanel() {
     const el = document.createElement("button");
     el.type = "button";
     el.className = "style-card" + (style.id === current.style ? " selected" : "");
-    el.innerHTML = `<span class="icon">${style.icon}</span><span>${style.label}</span>`;
+    el.innerHTML = `<img class="icon" src="${style.icon}" alt="" width="20" height="20"><span>${style.label}</span>`;
     el.addEventListener("click", () => {
       ThemeManager.setStyle(style.id);
+      Particles.setStyle(style.id);
       styleGrid.querySelectorAll(".style-card").forEach((s) => s.classList.remove("selected"));
       el.classList.add("selected");
     });
@@ -95,6 +96,8 @@ function initSettingsPanel() {
   document.getElementById("btn-settings").addEventListener("click", () => overlay.classList.remove("hidden"));
   document.getElementById("btn-settings-close").addEventListener("click", () => overlay.classList.add("hidden"));
   overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.classList.add("hidden"); });
+
+  Particles.setStyle(current.style);
 }
 
 document.addEventListener("DOMContentLoaded", initSettingsPanel);
