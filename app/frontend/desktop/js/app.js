@@ -9,24 +9,57 @@ const state = {
 };
 
 const screens = ["screen-1", "screen-2", "screen-3", "screen-4", "screen-5"];
+let currentScreenIndex = 0;
 
 function showScreen(id) {
+  const newIndex = screens.indexOf(id);
+  const direction = newIndex >= currentScreenIndex ? "enter-forward" : "enter-back";
+  currentScreenIndex = newIndex;
+
   for (const s of screens) {
-    document.getElementById(s).classList.toggle("hidden", s !== id);
+    const el = document.getElementById(s);
+    if (s === id) {
+      el.classList.remove("hidden", "enter-forward", "enter-back");
+      void el.offsetWidth; // restart the CSS animation even if this screen was shown before
+      el.classList.add(direction);
+    } else {
+      el.classList.add("hidden");
+    }
   }
-  const stepIndex = screens.indexOf(id);
   document.querySelectorAll(".steps .dot").forEach((dot, i) => {
-    dot.classList.toggle("active", i === stepIndex);
-    dot.classList.toggle("done", i < stepIndex);
+    dot.classList.toggle("active", i === newIndex);
+    dot.classList.toggle("done", i < newIndex);
   });
 }
 
 function showError(message) {
   const banner = document.getElementById("error-banner");
-  banner.textContent = message;
+  banner.innerHTML = `<span class="icon">⚠</span><span>${message}</span>`;
   banner.classList.remove("hidden");
-  setTimeout(() => banner.classList.add("hidden"), 6000);
+  Sound.error();
+  clearTimeout(showError._timer);
+  showError._timer = setTimeout(() => banner.classList.add("hidden"), 6000);
 }
+
+// ---- Retro click sound + ripple burst on every interactive element ----
+function spawnRipple(target, clientX, clientY) {
+  const rect = target.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  const ripple = document.createElement("span");
+  ripple.className = "ripple";
+  ripple.style.width = ripple.style.height = `${size}px`;
+  ripple.style.left = `${clientX - rect.left - size / 2}px`;
+  ripple.style.top = `${clientY - rect.top - size / 2}px`;
+  target.appendChild(ripple);
+  ripple.addEventListener("animationend", () => ripple.remove());
+}
+
+document.addEventListener("click", (e) => {
+  const interactive = e.target.closest(".btn, .icon-btn, .position-grid .cell, .swatch, .style-card");
+  if (!interactive) return;
+  Sound.click();
+  if (interactive.classList.contains("btn")) spawnRipple(interactive, e.clientX, e.clientY);
+});
 
 function parseTimecode(value) {
   if (!value || !value.trim()) return null;
@@ -185,6 +218,7 @@ function watchProgress(jobId) {
     message.textContent = `${STAGE_LABELS[data.stage] || data.stage}: ${data.message}`;
 
     if (data.stage === "done") {
+      Sound.success();
       loadResults(jobId);
     } else if (data.stage === "error") {
       showError(data.message);
