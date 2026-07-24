@@ -1,7 +1,16 @@
 """yt-dlp wrapper: metadata lookup and range-limited download.
 
 Only downloads the requested time range when one is given, via yt-dlp's
-download_ranges/force_keyframes_at_cuts (equivalent of --download-sections).
+download_ranges (equivalent of --download-sections). Deliberately does NOT
+use force_keyframes_at_cuts: that flag makes yt-dlp re-encode the section
+locally via ffmpeg to land exactly on the requested boundary, which for a
+long/high-res source can mean several GB of RAM and 100% CPU for a very
+long time with zero progress feedback (yt-dlp's progress_hooks only cover
+the actual network download, not this postprocessing step) - indistinguishable
+from a hang. cutter.py already re-cuts precisely from whatever we download
+here, so a download boundary that's merely "close" (snapped to the nearest
+keyframe, typically within a couple of seconds) costs nothing - the final
+clip timing is unaffected.
 """
 from __future__ import annotations
 
@@ -48,6 +57,26 @@ class DownloadError(RuntimeError):
     """Raised for user-facing download failures (private/unavailable video, no network, ...)."""
 
 
+# The final export is always scaled to a fixed 1080x1920 canvas (see
+# overlay.py), so downloading source resolution above what that needs is
+# pure waste - it slows the download and buys zero visible quality in the
+# output. Capping this is also the main lever for the "Быстрый" quality
+# preset to actually mean "faster" - previously it only changed the final
+# encode preset/CRF, not what got downloaded in the first place.
+_DOWNLOAD_HEIGHT_CAP = {
+    "fast": 720,
+    "medium": 1080,
+    "detailed": 1440,
+}
+
+
+def _format_selector(quality: str | None) -> str:
+    cap = _DOWNLOAD_HEIGHT_CAP.get(quality or "")
+    if cap is None:
+        return "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/best"
+    return f"bv*[height<={cap}][ext=mp4]+ba[ext=m4a]/b[height<={cap}][ext=mp4]/best[height<={cap}]/best"
+
+
 def fetch_metadata(url: str) -> VideoMetadata:
     ydl_opts = {
         "quiet": True, "no_warnings": True, "skip_download": True,
@@ -73,8 +102,10 @@ def download_video(
     job_id: str,
     time_range: TimeRange | None = None,
     on_progress: ProgressCallback | None = None,
+    quality: str | None = None,
 ) -> Path:
-    """Downloads `url` into dest_dir/{job_id}.mp4, optionally limited to time_range."""
+    """Downloads `url` into dest_dir/{job_id}.mp4, optionally limited to time_range
+    and capped to a resolution matching `quality` (fast/medium/detailed)."""
     dest_dir.mkdir(parents=True, exist_ok=True)
     outtmpl = str(dest_dir / f"{job_id}.%(ext)s")
 
@@ -90,7 +121,7 @@ def download_video(
             on_progress(100, "завершено, объединение потоков...")
 
     ydl_opts: dict = {
-        "format": "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/best",
+        "format": _format_selector(quality),
         "outtmpl": outtmpl,
         "merge_output_format": "mp4",
         "progress_hooks": [hook],
@@ -105,8 +136,16 @@ def download_video(
         start = time_range.start_sec or 0
         end = time_range.end_sec  # None means "to the end" - yt-dlp accepts that
         ydl_opts["download_ranges"] = download_range_func(None, [(start, end)])
-        ydl_opts["force_keyframes_at_cuts"] = True
+        # No force_keyframes_at_cuts here on purpose - see the module
+        # docstring. The section boundary lands on the nearest keyframe
+        # instead of exactly on start/end, which cutter.py's own re-cut
+        # absorbs without any visible effect on the final clip.
 
+    logger.info(
+        "Starting yt-dlp download: quality=%s range=%s format=%s",
+        quality, (time_range.start_sec, time_range.end_sec) if has_range else "full video",
+        ydl_opts["format"],
+    )
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])

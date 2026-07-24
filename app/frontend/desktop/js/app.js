@@ -267,15 +267,19 @@ function watchProgress(jobId) {
   // Fallback in case the websocket message is missed or the connection drops
   // silently (e.g. the app window was backgrounded) - without this, a job
   // that actually finished on the backend could leave the UI stuck forever
-  // on the last progress screen it saw.
+  // on the last progress screen it saw. This also keeps the progress text
+  // itself moving while still running: a heavy ffmpeg/yt-dlp step can block
+  // the websocket push for a long stretch, and without a fallback here the
+  // screen would keep showing a stale "начало..." from minutes ago even
+  // though the backend has since moved well past that stage.
   const pollTimer = setInterval(async () => {
     if (finished) return;
     try {
       const res = await fetch(`/api/jobs/${jobId}`);
       if (!res.ok) return;
       const data = await res.json();
+      applyProgress(data.progress.stage, data.progress.progress, data.progress.message);
       if (data.status === "done" || data.status === "error") {
-        applyProgress(data.progress.stage, data.progress.progress, data.progress.message);
         finish(data.status, { error: data.error });
       }
     } catch {

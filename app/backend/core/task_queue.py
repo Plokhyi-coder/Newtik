@@ -187,6 +187,7 @@ def _run_job(state: JobState, request: JobCreateRequest, title: str) -> None:
             job_id,
             request.time_range,
             on_progress=lambda pct, msg: _push_progress(state, JobStage.DOWNLOAD, pct, msg),
+            quality=request.quality.value,
         )
 
         scores: dict[str, float] = {}
