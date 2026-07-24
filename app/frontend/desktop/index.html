@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Newtik</title>
+<meta name="color-scheme" content="dark">
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
 <link rel="stylesheet" href="/css/style.css">
 <script src="/js/theme.js"></script>
@@ -26,10 +27,18 @@
 
   <!-- Screen 1: URL + range -->
   <section class="screen" id="screen-1">
-    <h2>Ссылка на видео</h2>
-    <p class="hint">Вставьте ссылку на YouTube-видео и нажмите «Анализировать».</p>
+    <div class="screen-header">
+      <div class="screen-icon"><span class="icon-mask" style="mask-image:url(/assets/icon-link.svg);-webkit-mask-image:url(/assets/icon-link.svg)"></span></div>
+      <div class="screen-header-text">
+        <h2>Ссылка на видео</h2>
+        <p class="hint">Вставьте ссылку на YouTube-видео и нажмите «Анализировать».</p>
+      </div>
+    </div>
     <label for="url-input">Ссылка</label>
-    <input type="url" id="url-input" placeholder="https://www.youtube.com/watch?v=...">
+    <div class="input-icon-wrap">
+      <span class="icon-mask" style="mask-image:url(/assets/icon-youtube.svg);-webkit-mask-image:url(/assets/icon-youtube.svg)"></span>
+      <input type="url" id="url-input" placeholder="https://www.youtube.com/watch?v=...">
+    </div>
 
     <div id="video-preview" class="video-preview" style="display:none">
       <img id="preview-thumb" src="" alt="">
@@ -51,14 +60,24 @@
     </div>
 
     <div class="actions">
-      <button class="btn" id="btn-analyze">Анализировать</button>
-      <button class="btn btn-ghost" id="btn-to-screen-2">Далее</button>
+      <button class="btn" id="btn-analyze">
+        <span class="btn-icon icon-mask" style="mask-image:url(/assets/icon-sparkle.svg);-webkit-mask-image:url(/assets/icon-sparkle.svg)"></span>Анализировать
+      </button>
+      <button class="btn btn-ghost" id="btn-to-screen-2">
+        Далее<span class="btn-icon icon-mask btn-icon-after" style="mask-image:url(/assets/icon-arrow-right.svg);-webkit-mask-image:url(/assets/icon-arrow-right.svg)"></span>
+      </button>
     </div>
   </section>
 
   <!-- Screen 2: clip length + smart cutting (reserved) + variations (reserved) -->
   <section class="screen hidden" id="screen-2">
-    <h2>Параметры нарезки</h2>
+    <div class="screen-header">
+      <div class="screen-icon"><span class="icon-mask" style="mask-image:url(/assets/icon-scissors.svg);-webkit-mask-image:url(/assets/icon-scissors.svg)"></span></div>
+      <div class="screen-header-text">
+        <h2>Параметры нарезки</h2>
+        <p class="hint">Длина клипов и предпросмотр будущих режимов умной нарезки.</p>
+      </div>
+    </div>
     <label for="clip-length">Длина одного клипа (сек)</label>
     <input type="number" id="clip-length" min="15" max="90" value="30">
 
@@ -76,14 +95,24 @@
     <p class="hint">Стилевые вариации (кроп/скорость/цвет) появятся на следующем этапе разработки.</p>
 
     <div class="actions">
-      <button class="btn btn-ghost" data-back>Назад</button>
-      <button class="btn" data-next>Далее</button>
+      <button class="btn btn-ghost" data-back>
+        <span class="btn-icon icon-mask" style="mask-image:url(/assets/icon-arrow-left.svg);-webkit-mask-image:url(/assets/icon-arrow-left.svg)"></span>Назад
+      </button>
+      <button class="btn" data-next>
+        Далее<span class="btn-icon icon-mask btn-icon-after" style="mask-image:url(/assets/icon-arrow-right.svg);-webkit-mask-image:url(/assets/icon-arrow-right.svg)"></span>
+      </button>
     </div>
   </section>
 
   <!-- Screen 3 (spec screen 4): additional text overlay -->
   <section class="screen hidden" id="screen-3">
-    <h2>Дополнительный текст</h2>
+    <div class="screen-header">
+      <div class="screen-icon"><span class="icon-mask" style="mask-image:url(/assets/icon-type.svg);-webkit-mask-image:url(/assets/icon-type.svg)"></span></div>
+      <div class="screen-header-text">
+        <h2>Дополнительный текст</h2>
+        <p class="hint">Текст, время появления и позиция на кадре.</p>
+      </div>
+    </div>
     <label for="overlay-text">Текст на видео</label>
     <input type="text" id="overlay-text" placeholder="Подписку и лайк!">
 
@@ -112,15 +141,24 @@
     </div>
 
     <div class="actions">
-      <button class="btn btn-ghost" data-back>Назад</button>
-      <button class="btn" id="btn-start">Начать обработку</button>
+      <button class="btn btn-ghost" data-back>
+        <span class="btn-icon icon-mask" style="mask-image:url(/assets/icon-arrow-left.svg);-webkit-mask-image:url(/assets/icon-arrow-left.svg)"></span>Назад
+      </button>
+      <button class="btn" id="btn-start">
+        <span class="btn-icon icon-mask" style="mask-image:url(/assets/icon-sparkle.svg);-webkit-mask-image:url(/assets/icon-sparkle.svg)"></span>Начать обработку
+      </button>
     </div>
   </section>
 
   <!-- Screen 4: processing -->
   <section class="screen hidden" id="screen-4">
-    <h2>Обработка видео</h2>
-    <p class="hint" id="stage-list">Скачивание → Нарезка → Наложение текста → Готово</p>
+    <div class="screen-header">
+      <div class="screen-icon"><span class="icon-mask" style="mask-image:url(/assets/icon-clock.svg);-webkit-mask-image:url(/assets/icon-clock.svg)"></span></div>
+      <div class="screen-header-text">
+        <h2>Обработка видео</h2>
+        <p class="hint" id="stage-list">Скачивание → Нарезка → Наложение текста → Готово</p>
+      </div>
+    </div>
     <div class="progress-wrap">
       <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
       <div class="progress-stage" id="progress-message">Ожидание...</div>
@@ -129,9 +167,17 @@
 
   <!-- Screen 5: results -->
   <section class="screen hidden" id="screen-5">
-    <h2>Готовые клипы</h2>
+    <div class="screen-header">
+      <div class="screen-icon"><span class="icon-mask" style="mask-image:url(/assets/icon-check.svg);-webkit-mask-image:url(/assets/icon-check.svg)"></span></div>
+      <div class="screen-header-text">
+        <h2>Готовые клипы</h2>
+        <p class="hint">Скачайте отдельные клипы или всё сразу архивом.</p>
+      </div>
+    </div>
     <div class="results-toolbar">
-      <a class="btn btn-cta" id="btn-download-all">Скачать всё (zip)</a>
+      <a class="btn btn-cta" id="btn-download-all">
+        <span class="btn-icon icon-mask" style="mask-image:url(/assets/icon-download.svg);-webkit-mask-image:url(/assets/icon-download.svg)"></span>Скачать всё (zip)
+      </a>
       <button class="btn btn-ghost" id="btn-restart">Обработать другое видео</button>
     </div>
     <div id="clips-container"></div>

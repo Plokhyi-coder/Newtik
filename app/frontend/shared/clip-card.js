@@ -39,7 +39,7 @@ function renderClipCard(jobId, clip, urls) {
       <div class="clip-label">${label}</div>
       <div class="clip-time">${formatTime(clip.source_start)} – ${formatTime(clip.source_end)}</div>
       ${scoreHtml}
-      <a class="btn btn-small" href="${urls.download}" download>Скачать</a>
+      <a class="btn btn-small" href="${urls.download}" download><span class="btn-icon icon-mask" style="mask-image:url(/assets/icon-download.svg);-webkit-mask-image:url(/assets/icon-download.svg);width:13px;height:13px;margin-right:5px;vertical-align:-2px"></span>Скачать</a>
     </div>
   `;
   return el;

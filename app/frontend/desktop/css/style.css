@@ -5,6 +5,12 @@
    cleanly with any of the 4 styles (24 combinations).
    ========================================================================== */
 :root {
+  /* Tells WebView2/Edge/Chromium this page is already dark-themed, so their
+     "force dark mode for web content" heuristic leaves our colors alone -
+     without this, that heuristic can selectively re-invert elements like
+     headings while leaving other text untouched, which is exactly the
+     "black unreadable heading" bug this fixes. */
+  color-scheme: dark;
   --bg: #0f1117;
   --surface: #1a1d29;
   --surface-2: #232738;
@@ -209,11 +215,54 @@ header.top-bar .logo span { color: var(--accent); }
 .screen {
   position: relative;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--accent-glow);
   border-radius: var(--radius);
-  padding: 28px;
-  transition: background 0.4s ease, border-color 0.4s ease, border-radius 0.4s ease;
+  padding: 32px;
+  box-shadow: 0 0 0 1px var(--accent-glow), 0 0 40px -10px var(--accent-glow), 0 24px 48px rgba(0, 0, 0, 0.35);
+  transition: background 0.4s ease, border-color 0.4s ease, border-radius 0.4s ease, box-shadow 0.4s ease;
 }
+
+/* ==========================================================================
+   Screen header: icon badge + heading/subtitle, and the reusable mask-icon
+   system used for badges, input prefixes, and button icons. A plain black
+   silhouette SVG works as a mask regardless of which of the 6 accent colors
+   is active - the element's own background-color paints through it.
+   ========================================================================== */
+.icon-mask {
+  display: inline-block; flex-shrink: 0;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+  -webkit-mask-position: center; mask-position: center;
+  -webkit-mask-size: contain; mask-size: contain;
+}
+
+.screen-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px; }
+.screen-header-text { padding-top: 2px; }
+.screen-header h2 { margin-bottom: 6px; }
+.screen-header p.hint { margin: 0; }
+
+.screen-icon {
+  width: 48px; height: 48px; border-radius: calc(var(--radius) * 0.6);
+  background: var(--accent); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 20px -4px var(--accent);
+}
+.screen-icon .icon-mask {
+  width: 24px; height: 24px;
+  background-color: var(--btn-text);
+}
+
+.input-icon-wrap { position: relative; }
+.input-icon-wrap input { padding-left: 46px; }
+.input-icon-wrap .icon-mask {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  width: 20px; height: 20px; background-color: var(--muted); pointer-events: none;
+}
+
+.btn-icon {
+  width: 16px; height: 16px; margin-right: 8px; vertical-align: -3px;
+  background-color: currentColor;
+}
+.btn-icon.btn-icon-after { margin-right: 0; margin-left: 8px; }
 
 /* Thematic corner flourishes - decorative only (pointer-events: none), each
    style targets its own image so switching styles swaps art, not just color. */
@@ -280,7 +329,7 @@ header.top-bar .logo span { color: var(--accent); }
   to { opacity: 1; transform: translateX(0) scale(1); }
 }
 
-h2 { margin-top: 0; font-size: 20px; }
+h2 { margin: 0; font-size: 21px; color: var(--text); }
 p.hint { color: var(--muted); font-size: 14px; line-height: 1.5; }
 
 label { display: block; margin: 18px 0 6px; font-size: 14px; color: var(--muted); }
