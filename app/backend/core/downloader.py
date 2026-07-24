@@ -88,10 +88,21 @@ _DOWNLOAD_HEIGHT_CAP = {
 
 
 def _format_selector(quality: str | None) -> str:
+    # Deliberately no [ext=mp4]/[ext=m4a] filters: YouTube very often serves
+    # anything above ~480p only as VP9/AV1 in a webm container, with mp4/avc1
+    # capped much lower (sometimes 360-480p) or absent above that. Requiring
+    # mp4 here silently forced every quality preset down to that same
+    # low-res mp4-only stream - "fast/medium/detailed" all produced identical,
+    # visibly worse-than-source output no matter what the user picked.
+    # download_video() already sets merge_output_format="mp4", which remuxes
+    # (or, for incompatible codecs, transcodes) the final file to .mp4 - and
+    # overlay.py always re-encodes to libx264 regardless of the source codec -
+    # so the downloaded container/codec never reaches the user; only the
+    # resolution cap below matters.
     cap = _DOWNLOAD_HEIGHT_CAP.get(quality or "")
     if cap is None:
-        return "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/best"
-    return f"bv*[height<={cap}][ext=mp4]+ba[ext=m4a]/b[height<={cap}][ext=mp4]/best[height<={cap}]/best"
+        return "bv*+ba/b/best"
+    return f"bv*[height<={cap}]+ba/b[height<={cap}]/best[height<={cap}]/best"
 
 
 def fetch_metadata(url: str) -> VideoMetadata:
