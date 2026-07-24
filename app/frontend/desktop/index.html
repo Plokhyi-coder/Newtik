@@ -301,13 +301,21 @@
         </div>
       </div>
 
-      <!-- Section: Задачи (placeholder) -->
+      <!-- Section: Задачи -->
       <div class="app-section hidden" id="section-tasks">
-        <div class="screen placeholder-screen">
-          <div class="screen-icon" style="width:64px;height:64px;border-radius:16px;"><span class="icon-mask" style="width:32px;height:32px;mask-image:url(/assets/icon-tasks.svg);-webkit-mask-image:url(/assets/icon-tasks.svg)"></span></div>
-          <h2>Задачи</h2>
-          <p class="hint">Очередь фоновых обработок появится здесь — в разработке.</p>
-        </div>
+        <section class="screen">
+          <div class="screen-header">
+            <div class="screen-icon"><span class="icon-mask" style="mask-image:url(/assets/icon-tasks.svg);-webkit-mask-image:url(/assets/icon-tasks.svg)"></span></div>
+            <div class="screen-header-text">
+              <h2>Задачи</h2>
+              <p class="hint">Все запущенные и завершённые обработки видео.</p>
+            </div>
+          </div>
+          <div id="tasks-empty" class="placeholder-screen hidden">
+            <p class="hint">Пока нет ни одной задачи — запустите обработку на вкладке «Залив видео».</p>
+          </div>
+          <div id="tasks-list"></div>
+        </section>
       </div>
     </div>
   </main>
@@ -345,6 +353,7 @@
 <script src="/js/particles.js"></script>
 <script src="/js/sidebar.js"></script>
 <script src="/js/range-slider.js"></script>
+<script src="/js/tasks.js"></script>
 <script src="/shared/clip-card.js"></script>
 <script src="/js/app.js"></script>
 </body>

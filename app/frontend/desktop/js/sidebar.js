@@ -25,6 +25,11 @@ function switchSection(sectionId) {
   });
   const activeItem = document.querySelector(`.nav-item[data-section="${sectionId}"]`);
   moveNavIndicator(activeItem);
+
+  if (typeof Tasks !== "undefined") {
+    if (sectionId === "tasks") Tasks.start();
+    else Tasks.stop();
+  }
 }
 
 function initSidebarNav() {

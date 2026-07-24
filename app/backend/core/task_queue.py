@@ -18,6 +18,7 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from pathlib import Path
 
 from backend.config.settings import DOWNLOADS_DIR, JOBS_DIR
 from backend.core import cutter, downloader, highlight_scorer, overlay
@@ -28,6 +29,7 @@ from backend.models.schemas import (
     JobManifest,
     JobProgress,
     JobStage,
+    JobSummary,
 )
 
 logger = logging.getLogger("newtik.task_queue")
@@ -46,10 +48,16 @@ def bind_event_loop(loop: asyncio.AbstractEventLoop) -> None:
 @dataclass
 class JobState:
     job_id: str
+    source_url: str = ""
+    title: str = ""
+    thumbnail_url: str | None = None
+    created_at: str = ""
     status: str = "queued"  # queued | running | done | error
     progress: JobProgress = field(default_factory=lambda: JobProgress(stage=JobStage.QUEUED))
     manifest: JobManifest | None = None
     error: str | None = None
+    finished_at: str | None = None
+    archived: bool = False
     subscribers: list[asyncio.Queue] = field(default_factory=list)
 
 
@@ -57,16 +65,93 @@ def get_job(job_id: str) -> JobState | None:
     return _jobs.get(job_id)
 
 
-def create_job(request: JobCreateRequest, title: str) -> JobState:
+def _to_summary(state: JobState) -> JobSummary:
+    return JobSummary(
+        job_id=state.job_id,
+        source_url=state.source_url,
+        title=state.title,
+        thumbnail_url=state.thumbnail_url,
+        created_at=state.created_at,
+        status=state.status,
+        progress=state.progress,
+        finished_at=state.finished_at,
+        error=state.error,
+    )
+
+
+def _meta_path(job_id: str) -> Path:
+    return JOBS_DIR / job_id / "job_meta.json"
+
+
+def _persist_meta(state: JobState) -> None:
+    path = _meta_path(state.job_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(_to_summary(state).model_dump_json(indent=2), encoding="utf-8")
+
+
+def list_jobs() -> list[JobSummary]:
+    """Merges this process's in-memory jobs with any job_meta.json left on
+    disk by a previous run (app restarted mid-job or after finishing) -
+    in-memory always wins since it's the freshest, live-updating copy."""
+    summaries: dict[str, JobSummary] = {jid: _to_summary(s) for jid, s in _jobs.items() if not s.archived}
+
+    if JOBS_DIR.exists():
+        for meta_path in JOBS_DIR.glob("*/job_meta.json"):
+            job_id = meta_path.parent.name
+            if job_id in summaries:
+                continue
+            try:
+                summary = JobSummary.model_validate_json(meta_path.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            if not _is_archived_on_disk(job_id):
+                summaries[job_id] = summary
+
+    return sorted(summaries.values(), key=lambda s: s.created_at, reverse=True)
+
+
+def _archived_marker_path(job_id: str) -> Path:
+    return JOBS_DIR / job_id / ".archived"
+
+
+def _is_archived_on_disk(job_id: str) -> bool:
+    return _archived_marker_path(job_id).exists()
+
+
+def delete_job(job_id: str) -> bool:
+    """Dismisses a job from the "Задачи" list. Does not touch clip files or
+    the manifest - those stay on disk for the Gallery to show separately."""
+    state = _jobs.get(job_id)
+    found = state is not None
+    if state is not None:
+        state.archived = True
+        _persist_meta(state)
+    if (JOBS_DIR / job_id).exists():
+        found = True
+        _archived_marker_path(job_id).touch()
+    return found
+
+
+def create_job(request: JobCreateRequest, title: str, thumbnail_url: str | None = None) -> JobState:
     job_id = uuid.uuid4().hex[:12]
-    state = JobState(job_id=job_id)
+    state = JobState(
+        job_id=job_id,
+        source_url=request.source_url,
+        title=title,
+        thumbnail_url=thumbnail_url,
+        created_at=datetime.now(timezone.utc).isoformat(),
+    )
     _jobs[job_id] = state
+    _persist_meta(state)
     _executor.submit(_run_job, state, request, title)
     return state
 
 
 def _push_progress(state: JobState, stage: JobStage, progress: int, message: str) -> None:
     state.progress = JobProgress(stage=stage, progress=progress, message=message)
+    if stage in (JobStage.DONE, JobStage.ERROR):
+        state.finished_at = datetime.now(timezone.utc).isoformat()
+    _persist_meta(state)
     if _loop is None:
         return
     for q in list(state.subscribers):

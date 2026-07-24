@@ -82,3 +82,20 @@ class JobManifest(BaseModel):
     title: str
     created_at: str
     clips: list[ClipMeta] = Field(default_factory=list)
+
+
+class JobSummary(BaseModel):
+    """Lightweight per-job record for the "Задачи" list - written to
+    job_meta.json on creation and refreshed on every progress update, so the
+    task list survives an app restart even mid-job (the last-known progress
+    just won't move again until this process re-runs it)."""
+
+    job_id: str
+    source_url: str
+    title: str
+    thumbnail_url: str | None = None
+    created_at: str
+    status: str = "queued"  # queued | running | done | error
+    progress: JobProgress = Field(default_factory=lambda: JobProgress(stage=JobStage.QUEUED))
+    finished_at: str | None = None
+    error: str | None = None

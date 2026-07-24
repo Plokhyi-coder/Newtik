@@ -150,6 +150,11 @@
 
 * { box-sizing: border-box; }
 
+/* Generic display-toggle utility - most .hidden usages are scoped to a
+   specific element (.screen.hidden, .app-section.hidden, ...) for historical
+   reasons, but new code can just toggle this directly. */
+.hidden { display: none; }
+
 html, body { height: 100%; }
 
 body {
@@ -719,6 +724,65 @@ input.range-time-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2p
 .clip-score span { font-size: 12px; color: var(--muted); }
 
 .results-toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 22px; }
+
+/* ==========================================================================
+   Задачи (tasks) list
+   ========================================================================== */
+#tasks-list { display: flex; flex-direction: column; gap: 12px; }
+
+.task-card {
+  position: relative;
+  display: flex; align-items: center; gap: 16px;
+  padding: 14px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 0.6);
+  transition: border-color 0.15s ease;
+}
+.task-card:hover { border-color: var(--accent-glow); }
+
+.task-thumb {
+  width: 96px; height: 54px; border-radius: calc(var(--radius) * 0.4);
+  object-fit: cover; flex-shrink: 0; background: #000;
+}
+.task-thumb-placeholder { background: var(--surface); }
+
+.task-info { flex: 1; min-width: 0; }
+.task-title {
+  font-weight: 600; font-size: 15px; margin-bottom: 6px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.task-progress-bar {
+  height: 6px; border-radius: 999px; background: var(--border); overflow: hidden; margin-bottom: 6px;
+}
+.task-progress-fill { height: 100%; background: var(--accent); transition: width 0.3s ease; }
+.task-stage-label { font-size: 12px; color: var(--muted); }
+
+.task-status {
+  display: inline-block; font-size: 12px; font-weight: 700;
+  padding: 2px 9px; border-radius: 999px; margin-bottom: 4px;
+}
+.task-status-done { background: rgba(60, 200, 120, 0.16); color: #3fd67a; }
+.task-status-error { background: rgba(230, 70, 70, 0.16); color: var(--danger); }
+.task-error-msg { font-size: 12px; color: var(--muted); }
+
+.task-ago {
+  position: absolute; right: 16px; bottom: 12px;
+  font-size: 11px; color: var(--muted);
+}
+
+.task-delete {
+  position: absolute; top: 10px; right: 10px;
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--muted); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; line-height: 1;
+  opacity: 0; transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.task-card:hover .task-delete { opacity: 1; }
+.task-delete:hover { color: var(--danger); border-color: var(--danger); }
 
 /* ==========================================================================
    Appearance settings panel (theme color + visual style + sound toggle)
