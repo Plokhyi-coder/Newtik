@@ -106,8 +106,6 @@
           <div class="dot" data-step="1"></div>
           <div class="dot" data-step="2"></div>
           <div class="dot" data-step="3"></div>
-          <div class="dot" data-step="4"></div>
-          <div class="dot" data-step="5"></div>
         </div>
 
         <!-- Screen 1: URL + range -->
@@ -264,38 +262,6 @@
           </div>
         </section>
 
-        <!-- Screen 4: processing -->
-        <section class="screen hidden" id="screen-4">
-          <div class="screen-header">
-            <div class="screen-icon"><span class="icon-mask" style="mask-image:url(/assets/icon-clock.svg);-webkit-mask-image:url(/assets/icon-clock.svg)"></span></div>
-            <div class="screen-header-text">
-              <h2>Обработка видео</h2>
-              <p class="hint" id="stage-list">Скачивание → Нарезка → Наложение текста → Готово</p>
-            </div>
-          </div>
-          <div class="progress-wrap">
-            <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
-            <div class="progress-stage" id="progress-message">Ожидание...</div>
-          </div>
-        </section>
-
-        <!-- Screen 5: results -->
-        <section class="screen hidden" id="screen-5">
-          <div class="screen-header">
-            <div class="screen-icon"><span class="icon-mask" style="mask-image:url(/assets/icon-check.svg);-webkit-mask-image:url(/assets/icon-check.svg)"></span></div>
-            <div class="screen-header-text">
-              <h2>Готовые клипы</h2>
-              <p class="hint">Скачайте отдельные клипы или всё сразу архивом.</p>
-            </div>
-          </div>
-          <div class="results-toolbar">
-            <a class="btn btn-cta" id="btn-download-all">
-              <span class="btn-icon icon-mask" style="mask-image:url(/assets/icon-download.svg);-webkit-mask-image:url(/assets/icon-download.svg)"></span>Скачать всё (zip)
-            </a>
-            <button class="btn btn-ghost" id="btn-restart">Обработать другое видео</button>
-          </div>
-          <div id="clips-container"></div>
-        </section>
       </div>
 
       <!-- Section: Галерея (placeholder) -->
@@ -453,7 +419,6 @@
 <script src="/js/qr.js"></script>
 <script src="/js/gallery.js"></script>
 <script src="/js/notifications.js"></script>
-<script src="/shared/clip-card.js"></script>
 <script src="/js/app.js"></script>
 </body>
 </html>

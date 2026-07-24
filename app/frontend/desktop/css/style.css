@@ -694,6 +694,9 @@ input.range-time-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2p
 }
 .error-banner.hidden { display: none; }
 .error-banner .icon { font-size: 16px; }
+.error-banner.is-success {
+  background: rgba(60, 200, 120, 0.12); border-color: #3fd67a; color: #9ff0c0;
+}
 @keyframes banner-in {
   0% { opacity: 0; transform: translateY(-10px); }
   60% { transform: translateY(2px); }

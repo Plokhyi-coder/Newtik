@@ -12,7 +12,10 @@ const state = {
   jobId: null,
 };
 
-const screens = ["screen-1", "screen-2", "screen-3", "screen-4", "screen-5"];
+// Progress and results live in "Задачи"/"Галерея" now, so the wizard itself
+// ends at screen 3 - starting a job hands it to the background queue and
+// resets straight back to screen 1 for the next video.
+const screens = ["screen-1", "screen-2", "screen-3"];
 let currentScreenIndex = 0;
 
 function showScreen(id) {
@@ -37,13 +40,23 @@ function showScreen(id) {
   });
 }
 
-function showError(message) {
+function showBanner(message, { icon, success }) {
   const banner = document.getElementById("error-banner");
-  banner.innerHTML = `<span class="icon">⚠</span><span>${message}</span>`;
+  banner.innerHTML = `<span class="icon">${icon}</span><span>${message}</span>`;
+  banner.classList.toggle("is-success", !!success);
   banner.classList.remove("hidden");
+  clearTimeout(showBanner._timer);
+  showBanner._timer = setTimeout(() => banner.classList.add("hidden"), 6000);
+}
+
+function showError(message) {
+  showBanner(message, { icon: "⚠", success: false });
   Sound.error();
-  clearTimeout(showError._timer);
-  showError._timer = setTimeout(() => banner.classList.add("hidden"), 6000);
+}
+
+function showSuccess(message) {
+  showBanner(message, { icon: "✓", success: true });
+  Sound.success();
 }
 
 // ---- Retro click sound + ripple burst on every interactive element ----
@@ -206,8 +219,12 @@ document.getElementById("btn-start").addEventListener("click", async () => {
     }
     const data = await res.json();
     state.jobId = data.job_id;
-    showScreen("screen-4");
-    watchProgress(data.job_id);
+    // Hand the job off to the background queue and reset the wizard right
+    // away instead of parking the user on a progress screen - processing
+    // keeps running server-side and is tracked in "Задачи", so another
+    // video can be queued immediately.
+    resetWizard();
+    showSuccess("Обработка запущена — следите за ней во вкладке «Задачи».");
   } catch (e) {
     showError(e.message);
   } finally {
@@ -215,109 +232,17 @@ document.getElementById("btn-start").addEventListener("click", async () => {
   }
 });
 
-// ---- Screen 4: progress via WebSocket ----
-const STAGE_LABELS = {
-  queued: "В очереди",
-  download: "Скачивание",
-  cut_or_analyze: "Нарезка",
-  transcribe: "Распознавание речи",
-  subtitles_overlay: "Наложение субтитров и текста",
-  variations: "Генерация вариантов",
-  done: "Готово",
-  error: "Ошибка",
-};
+function resetWizard() {
+  state.url = "";
+  state.metadata = null;
+  state.rangeStart = null;
+  state.rangeEnd = null;
+  state.overlay = { text: "", position_x: "center", position_y: "center", start_sec: 0, duration_sec: 5 };
 
-function watchProgress(jobId) {
-  let finished = false;
+  document.getElementById("url-input").value = "";
+  document.getElementById("overlay-text").value = "";
+  document.getElementById("video-preview").style.display = "none";
+  document.getElementById("range-row").style.display = "none";
 
-  const applyProgress = (stage, progress, message) => {
-    const fill = document.getElementById("progress-fill");
-    const messageEl = document.getElementById("progress-message");
-    fill.style.width = `${progress}%`;
-    messageEl.textContent = `${STAGE_LABELS[stage] || stage}: ${message}`;
-  };
-
-  const finish = (status, progress) => {
-    if (finished) return;
-    finished = true;
-    clearInterval(pollTimer);
-    if (status === "done") {
-      Sound.success();
-      loadResults(jobId);
-    } else if (status === "error") {
-      showError(progress?.error || progress?.message || "Обработка завершилась с ошибкой");
-    }
-  };
-
-  const proto = location.protocol === "https:" ? "wss" : "ws";
-  const ws = new WebSocket(`${proto}://${location.host}/ws/jobs/${jobId}`);
-
-  ws.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    if (finished) return;
-    if (data.error) {
-      showError(data.error);
-      return;
-    }
-    applyProgress(data.stage, data.progress, data.message);
-    if (data.stage === "done") finish("done");
-    else if (data.stage === "error") finish("error", { message: data.message });
-  };
-
-  // Fallback in case the websocket message is missed or the connection drops
-  // silently (e.g. the app window was backgrounded) - without this, a job
-  // that actually finished on the backend could leave the UI stuck forever
-  // on the last progress screen it saw. This also keeps the progress text
-  // itself moving while still running: a heavy ffmpeg/yt-dlp step can block
-  // the websocket push for a long stretch, and without a fallback here the
-  // screen would keep showing a stale "начало..." from minutes ago even
-  // though the backend has since moved well past that stage.
-  const pollTimer = setInterval(async () => {
-    if (finished) return;
-    try {
-      const res = await fetch(`/api/jobs/${jobId}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      applyProgress(data.progress.stage, data.progress.progress, data.progress.message);
-      if (data.status === "done" || data.status === "error") {
-        finish(data.status, { error: data.error });
-      }
-    } catch {
-      // network hiccup - just try again on the next tick
-    }
-  }, 4000);
+  showScreen("screen-1");
 }
-
-// ---- Screen 5: results ----
-async function loadResults(jobId) {
-  const res = await fetch(`/api/jobs/${jobId}/clips`);
-  const manifest = await res.json();
-
-  const container = document.getElementById("clips-container");
-  container.innerHTML = "";
-
-  // MVP has no variations/scoring yet, so groups are already in video order -
-  // sortClips/filterClipsByScore (from shared/clip-card.js) plug in once stage 4/5/7 land.
-  const groups = groupByOriginal(manifest.clips);
-  for (const group of groups) {
-    const wrap = document.createElement("div");
-    wrap.className = "clip-group";
-    wrap.innerHTML = `<h3>Фрагмент ${group[0].clip_id.replace("clip_", "#")}</h3>`;
-    const cardsWrap = document.createElement("div");
-    cardsWrap.className = "clip-group-cards";
-    for (const clip of group) {
-      const card = renderClipCard(jobId, clip, {
-        download: `/api/jobs/${jobId}/download/${clip.clip_id}`,
-        thumbnail: `/api/jobs/${jobId}/thumbnail/${clip.clip_id}`,
-      });
-      cardsWrap.appendChild(card);
-    }
-    wrap.appendChild(cardsWrap);
-    container.appendChild(wrap);
-  }
-
-  document.getElementById("btn-download-all").href = `/api/jobs/${jobId}/download-all`;
-  showScreen("screen-5");
-}
-
-document.getElementById("btn-restart").addEventListener("click", () => location.reload());
