@@ -81,7 +81,7 @@ def _run_job(state: JobState, request: JobCreateRequest, title: str) -> None:
         clips_dir = job_dir / "clips"
         thumbs_dir = job_dir / "thumbnails"
 
-        _push_progress(state, JobStage.DOWNLOAD, 0, "Скачивание видео...")
+        _push_progress(state, JobStage.DOWNLOAD, 0, "начало...")
         source_path = downloader.download_video(
             request.source_url,
             DOWNLOADS_DIR,
@@ -117,7 +117,7 @@ def _run_job(state: JobState, request: JobCreateRequest, title: str) -> None:
             ))
             _push_progress(
                 state, JobStage.OVERLAY, int((i + 1) / total * 100),
-                f"Наложение текста: клип {i + 1}/{total}",
+                f"клип {i + 1}/{total}",
             )
 
         manifest = JobManifest(

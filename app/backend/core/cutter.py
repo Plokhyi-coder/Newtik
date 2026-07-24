@@ -65,6 +65,6 @@ def cut_by_time(
         segments.append(CutSegment(clip_id=clip_id, start=start, end=end, file_path=out_path))
         if on_progress:
             pct = int((i + 1) / len(boundaries) * 100) if boundaries else 100
-            on_progress(pct, f"Нарезка: клип {i + 1}/{len(boundaries)}")
+            on_progress(pct, f"клип {i + 1}/{len(boundaries)}")
 
     return segments

@@ -57,9 +57,9 @@ def download_video(
             total = d.get("total_bytes") or d.get("total_bytes_estimate")
             downloaded = d.get("downloaded_bytes", 0)
             pct = int(downloaded / total * 100) if total else 0
-            on_progress(pct, "Скачивание видео...")
+            on_progress(pct, "видео...")
         elif d["status"] == "finished":
-            on_progress(100, "Скачивание завершено, объединение потоков...")
+            on_progress(100, "завершено, объединение потоков...")
 
     ydl_opts: dict = {
         "format": "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/best",
