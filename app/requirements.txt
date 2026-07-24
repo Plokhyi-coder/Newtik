@@ -3,7 +3,6 @@ uvicorn[standard]>=0.30
 pydantic>=2.7
 pywebview>=5.2
 yt-dlp>=2024.8.6
-moviepy>=2.0
 python-multipart>=0.0.9
 
 # Stage 3+ (not yet wired into MVP, listed here so the environment is ready)
