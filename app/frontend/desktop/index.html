@@ -294,11 +294,37 @@
 
       <!-- Section: QR-передача (placeholder) -->
       <div class="app-section hidden" id="section-qr">
-        <div class="screen placeholder-screen">
-          <div class="screen-icon" style="width:64px;height:64px;border-radius:16px;"><span class="icon-mask" style="width:32px;height:32px;mask-image:url(/assets/icon-qr.svg);-webkit-mask-image:url(/assets/icon-qr.svg)"></span></div>
-          <h2>Передача на телефон</h2>
-          <p class="hint">Раздача клипов по Wi-Fi через QR-код появится здесь — в разработке.</p>
-        </div>
+        <section class="screen">
+          <div class="screen-header">
+            <div class="screen-icon"><span class="icon-mask" style="mask-image:url(/assets/icon-qr.svg);-webkit-mask-image:url(/assets/icon-qr.svg)"></span></div>
+            <div class="screen-header-text">
+              <h2>Передача на телефон</h2>
+              <p class="hint">Отсканируйте телефоном — откроется страница со всеми готовыми клипами для скачивания.</p>
+            </div>
+          </div>
+
+          <div class="qr-panel">
+            <div class="qr-image-wrap">
+              <img id="qr-image" class="qr-image" src="" alt="QR-код">
+            </div>
+            <div class="qr-details">
+              <p class="hint">Телефон и компьютер должны быть в одной Wi-Fi сети.</p>
+              <label>Или откройте ссылку вручную</label>
+              <div class="input-icon-wrap">
+                <span class="icon-mask" style="mask-image:url(/assets/icon-qr.svg);-webkit-mask-image:url(/assets/icon-qr.svg)"></span>
+                <input type="text" id="qr-url" readonly>
+              </div>
+              <div class="actions" style="margin-top:16px">
+                <button class="btn btn-ghost" id="btn-qr-refresh">
+                  <span class="btn-icon icon-mask" style="mask-image:url(/assets/icon-sparkle.svg);-webkit-mask-image:url(/assets/icon-sparkle.svg)"></span>Обновить
+                </button>
+              </div>
+              <p id="qr-warning" class="hint hidden" style="color:var(--danger)">
+                Не удалось определить адрес в локальной сети — убедитесь, что Wi-Fi подключён.
+              </p>
+            </div>
+          </div>
+        </section>
       </div>
 
       <!-- Section: Задачи -->
@@ -354,6 +380,7 @@
 <script src="/js/sidebar.js"></script>
 <script src="/js/range-slider.js"></script>
 <script src="/js/tasks.js"></script>
+<script src="/js/qr.js"></script>
 <script src="/shared/clip-card.js"></script>
 <script src="/js/app.js"></script>
 </body>

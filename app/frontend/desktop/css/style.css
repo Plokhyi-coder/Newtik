@@ -318,6 +318,19 @@ body::before, body::after { content: ""; position: fixed; inset: 0; pointer-even
 .placeholder-screen h2 { margin-bottom: 8px; }
 
 /* ==========================================================================
+   QR-передача (phone transfer)
+   ========================================================================== */
+.qr-panel { display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap; }
+.qr-image-wrap {
+  padding: 16px; background: #fff; border-radius: calc(var(--radius) * 0.6);
+  flex-shrink: 0; line-height: 0;
+}
+.qr-image { width: 200px; height: 200px; display: block; }
+.qr-details { flex: 1; min-width: 240px; }
+.qr-details label { margin-top: 0; }
+#qr-url { cursor: pointer; }
+
+/* ==========================================================================
    Ambient particle layer (js/particles.js) - sits behind #app so falling
    leaves / digital rain / pixel sparks only ever show in the empty margin
    around the card, never over text or controls.

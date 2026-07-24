@@ -30,7 +30,8 @@ WHISPER_COMPUTE_TYPE_CPU = "int8"
 TRANSFER_PORT = 8765
 TRANSFER_SESSION_TIMEOUT_SEC = 30 * 60
 
-HOST = "127.0.0.1"
+HOST = "127.0.0.1"  # what the desktop window itself connects to (loopback)
+BIND_HOST = "0.0.0.0"  # what uvicorn actually listens on, so phones on the same Wi-Fi can reach it
 API_PORT = 8000
 
 # Text overlay defaults

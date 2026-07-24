@@ -12,14 +12,17 @@ import uvicorn
 import webview
 
 from backend.app import create_app
-from backend.config.settings import HOST, API_PORT
+from backend.config.settings import BIND_HOST, HOST, API_PORT
 
 logger = logging.getLogger("newtik.main")
 
 
 def _run_server() -> None:
     app = create_app()
-    uvicorn.run(app, host=HOST, port=API_PORT, log_level="info")
+    # Binds on all interfaces (not just loopback) so a phone on the same
+    # Wi-Fi can reach the QR-transfer page - the desktop window itself still
+    # talks to 127.0.0.1 below, that's unaffected by what the server binds to.
+    uvicorn.run(app, host=BIND_HOST, port=API_PORT, log_level="info")
 
 
 def _wait_for_server(url: str, timeout: float = 15.0) -> None:

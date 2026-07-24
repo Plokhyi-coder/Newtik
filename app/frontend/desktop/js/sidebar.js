@@ -30,6 +30,7 @@ function switchSection(sectionId) {
     if (sectionId === "tasks") Tasks.start();
     else Tasks.stop();
   }
+  if (sectionId === "qr" && typeof QRPanel !== "undefined") QRPanel.refresh();
 }
 
 function initSidebarNav() {
