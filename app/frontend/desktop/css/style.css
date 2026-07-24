@@ -889,6 +889,8 @@ input.range-time-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2p
 .settings-overlay.hidden { display: none; }
 @keyframes overlay-in { from { opacity: 0; } to { opacity: 1; } }
 
+.notif-panel { width: 340px !important; }
+
 .settings-panel {
   position: relative;
   width: 420px; max-width: calc(100vw - 32px);

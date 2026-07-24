@@ -9,3 +9,4 @@ app/storage/jobs/*
 !app/storage/jobs/.gitkeep
 app/storage/logs/*
 !app/storage/logs/.gitkeep
+app/storage/notification_settings.json

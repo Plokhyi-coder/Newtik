@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from backend.config.settings import DOWNLOADS_DIR, JOBS_DIR
-from backend.core import cutter, downloader, highlight_scorer, overlay
+from backend.core import cutter, downloader, highlight_scorer, notifications, overlay
 from backend.core.ffmpeg_utils import extract_thumbnail, probe_duration
 from backend.models.schemas import (
     ClipMeta,
@@ -271,8 +271,10 @@ def _run_job(state: JobState, request: JobCreateRequest, title: str) -> None:
         state.manifest = manifest
         state.status = "done"
         _push_progress(state, JobStage.DONE, 100, "Готово")
+        notifications.notify("Newtik", f"Нарезка успешно готова: {title}")
     except Exception as exc:  # noqa: BLE001 - surfaced to the UI as a job error, not a crash
         logger.exception("Job %s failed", job_id)
         state.status = "error"
         state.error = str(exc)
         _push_progress(state, JobStage.ERROR, 0, str(exc))
+        notifications.notify("Newtik — ошибка", f"Не удалось обработать «{title}»: {exc}")
