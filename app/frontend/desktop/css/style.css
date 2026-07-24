@@ -420,6 +420,18 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-gl
 .checkbox-row .badge {
   font-size: 11px; background: var(--border); padding: 2px 8px; border-radius: 999px; color: var(--muted);
 }
+.checkbox-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); flex-shrink: 0; }
+
+.quality-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
+.quality-btn {
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: calc(var(--radius) * 0.7);
+  padding: 14px; cursor: pointer; text-align: left; color: var(--text); font-family: var(--font);
+  display: flex; flex-direction: column; gap: 4px; transition: all 0.15s ease;
+}
+.quality-btn:hover { border-color: var(--accent); transform: translateY(-2px); }
+.quality-btn.selected { border-color: var(--accent); background: var(--accent-glow); box-shadow: 0 0 0 1px var(--accent-glow); }
+.quality-title { font-weight: 600; font-size: 14px; }
+.quality-sub { font-size: 12px; color: var(--muted); }
 
 .position-grid {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;

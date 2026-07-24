@@ -20,8 +20,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 from backend.config.settings import DOWNLOADS_DIR, JOBS_DIR
-from backend.core import cutter, downloader, overlay
-from backend.core.ffmpeg_utils import extract_thumbnail
+from backend.core import cutter, downloader, highlight_scorer, overlay
+from backend.core.ffmpeg_utils import extract_thumbnail, probe_duration
 from backend.models.schemas import (
     ClipMeta,
     JobCreateRequest,
@@ -90,12 +90,31 @@ def _run_job(state: JobState, request: JobCreateRequest, title: str) -> None:
             on_progress=lambda pct, msg: _push_progress(state, JobStage.DOWNLOAD, pct, msg),
         )
 
-        segments = cutter.cut_by_time(
-            source_path,
-            clips_dir,
-            request.clip_length_sec,
-            on_progress=lambda pct, msg: _push_progress(state, JobStage.CUT, pct, msg),
-        )
+        scores: dict[str, float] = {}
+        if request.smart_cut_enabled:
+            _push_progress(state, JobStage.CUT, 0, "анализ моментов...")
+            curve = highlight_scorer.build_score_curve(source_path, job_dir)
+            total_duration = probe_duration(source_path)
+            boundaries = highlight_scorer.suggest_cut_points(curve, total_duration, request.clip_length_sec)
+
+            segments: list[cutter.CutSegment] = []
+            for i, (start, end) in enumerate(boundaries):
+                clip_id = f"clip_{i:03d}"
+                out_path = clips_dir / f"{clip_id}.mp4"
+                cutter.cut_segment(source_path, start, end, out_path)
+                segments.append(cutter.CutSegment(clip_id=clip_id, start=start, end=end, file_path=out_path))
+                scores[clip_id] = highlight_scorer.score_clip(curve, start, end)
+                _push_progress(
+                    state, JobStage.CUT, int((i + 1) / len(boundaries) * 100) if boundaries else 100,
+                    f"клип {i + 1}/{len(boundaries)}",
+                )
+        else:
+            segments = cutter.cut_by_time(
+                source_path,
+                clips_dir,
+                request.clip_length_sec,
+                on_progress=lambda pct, msg: _push_progress(state, JobStage.CUT, pct, msg),
+            )
 
         clips: list[ClipMeta] = []
         total = len(segments) or 1
@@ -105,7 +124,7 @@ def _run_job(state: JobState, request: JobCreateRequest, title: str) -> None:
                 f"клип {i + 1}/{total} (кодирование...)",
             )
             final_path = clips_dir / f"{seg.clip_id}_final.mp4"
-            overlay.apply_text_overlay(seg.file_path, final_path, request.text_overlay)
+            overlay.apply_text_overlay(seg.file_path, final_path, request.text_overlay, request.quality.value)
             if seg.file_path != final_path and seg.file_path.exists():
                 seg.file_path.unlink()
 
@@ -118,6 +137,7 @@ def _run_job(state: JobState, request: JobCreateRequest, title: str) -> None:
                 source_end=seg.end,
                 file_path=str(final_path.relative_to(job_dir)),
                 thumbnail_path=str(thumb_path.relative_to(job_dir)),
+                potential_score=scores.get(seg.clip_id),
             ))
             _push_progress(
                 state, JobStage.OVERLAY, int((i + 1) / total * 100),

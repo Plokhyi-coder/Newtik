@@ -31,13 +31,20 @@ class VideoMetadata(BaseModel):
     thumbnail_url: str | None = None
 
 
+class QualityMode(str, Enum):
+    FAST = "fast"
+    MEDIUM = "medium"
+    DETAILED = "detailed"
+
+
 class JobCreateRequest(BaseModel):
     source_url: str
     time_range: TimeRange = Field(default_factory=TimeRange)
     clip_length_sec: int = 30
-    smart_cut_enabled: bool = False  # reserved, stage 4
+    smart_cut_enabled: bool = False
     variations_count: int = 0  # reserved, stage 7
     subtitles_enabled: bool = False  # reserved, stage 3/6
+    quality: QualityMode = QualityMode.MEDIUM
     text_overlay: TextOverlayConfig = Field(default_factory=TextOverlayConfig)
 
 

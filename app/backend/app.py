@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from backend.api import routes_job, routes_project, routes_results, ws_progress
 from backend.config.settings import APP_DIR, LOGS_DIR
 from backend.core import task_queue
+from backend.core.ffmpeg_utils import ensure_ffmpeg_on_path
 
 FRONTEND_DESKTOP_DIR = APP_DIR / "frontend" / "desktop"
 FRONTEND_SHARED_DIR = APP_DIR / "frontend" / "shared"
@@ -30,6 +31,7 @@ def setup_logging() -> None:
 
 def create_app() -> FastAPI:
     setup_logging()
+    ensure_ffmpeg_on_path()
     app = FastAPI(title="Newtik")
 
     @app.on_event("startup")

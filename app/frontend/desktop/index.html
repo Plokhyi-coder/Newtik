@@ -69,25 +69,40 @@
     </div>
   </section>
 
-  <!-- Screen 2: clip length + smart cutting (reserved) + variations (reserved) -->
+  <!-- Screen 2: clip length + smart cutting + quality mode + variations (reserved) -->
   <section class="screen hidden" id="screen-2">
     <div class="screen-header">
       <div class="screen-icon"><span class="icon-mask" style="mask-image:url(/assets/icon-scissors.svg);-webkit-mask-image:url(/assets/icon-scissors.svg)"></span></div>
       <div class="screen-header-text">
         <h2>Параметры нарезки</h2>
-        <p class="hint">Длина клипов и предпросмотр будущих режимов умной нарезки.</p>
+        <p class="hint">Длина клипов, формат под TikTok/Shorts и скорость обработки.</p>
       </div>
     </div>
     <label for="clip-length">Длина одного клипа (сек)</label>
     <input type="number" id="clip-length" min="15" max="90" value="30">
 
-    <div class="checkbox-row disabled">
-      <input type="checkbox" disabled>
+    <div class="checkbox-row" id="smart-cut-row">
+      <input type="checkbox" id="smart-cut-checkbox">
       <div>
         <div>Умная нарезка (захват ключевых моментов)</div>
-        <div style="font-size:12px;color:var(--muted)">Появится на следующем этапе разработки</div>
+        <div style="font-size:12px;color:var(--muted)">Границы клипов сдвигаются к тихим местам по звуковой энергии видео. Режим «только лучшие моменты» появится позже.</div>
       </div>
-      <span class="badge">скоро</span>
+    </div>
+
+    <label>Скорость / качество обработки</label>
+    <div class="quality-row" id="quality-row">
+      <button type="button" class="quality-btn" data-quality="fast">
+        <span class="quality-title">Быстрый</span>
+        <span class="quality-sub">Ниже качество, максимум скорости</span>
+      </button>
+      <button type="button" class="quality-btn selected" data-quality="medium">
+        <span class="quality-title">Средний</span>
+        <span class="quality-sub">Баланс скорости и качества</span>
+      </button>
+      <button type="button" class="quality-btn" data-quality="detailed">
+        <span class="quality-title">Детальный</span>
+        <span class="quality-sub">Выше качество, дольше обработка</span>
+      </button>
     </div>
 
     <label for="variations-count">Количество дополнительных вариантов на клип</label>

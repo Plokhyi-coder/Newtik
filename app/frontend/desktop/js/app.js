@@ -4,6 +4,8 @@ const state = {
   rangeStart: null,
   rangeEnd: null,
   clipLength: 30,
+  smartCut: false,
+  quality: "medium",
   overlay: { text: "", position_x: "center", position_y: "center", start_sec: 0, duration_sec: 5 },
   jobId: null,
 };
@@ -133,6 +135,18 @@ document.getElementById("btn-to-screen-2").addEventListener("click", () => {
 });
 
 // ---- Screen 2 ----
+document.getElementById("smart-cut-checkbox").addEventListener("change", (e) => {
+  state.smartCut = e.target.checked;
+});
+
+document.querySelectorAll("#quality-row .quality-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("#quality-row .quality-btn").forEach((b) => b.classList.remove("selected"));
+    btn.classList.add("selected");
+    state.quality = btn.dataset.quality;
+  });
+});
+
 document.querySelector("#screen-2 [data-back]").addEventListener("click", () => showScreen("screen-1"));
 document.querySelector("#screen-2 [data-next]").addEventListener("click", () => {
   const len = parseInt(document.getElementById("clip-length").value, 10);
@@ -162,9 +176,10 @@ document.getElementById("btn-start").addEventListener("click", async () => {
     source_url: state.url,
     time_range: { start_sec: state.rangeStart, end_sec: state.rangeEnd },
     clip_length_sec: state.clipLength,
-    smart_cut_enabled: false,
+    smart_cut_enabled: state.smartCut,
     variations_count: 0,
     subtitles_enabled: false,
+    quality: state.quality,
     text_overlay: state.overlay,
   };
 
@@ -204,27 +219,60 @@ const STAGE_LABELS = {
 };
 
 function watchProgress(jobId) {
+  let finished = false;
+
+  const applyProgress = (stage, progress, message) => {
+    const fill = document.getElementById("progress-fill");
+    const messageEl = document.getElementById("progress-message");
+    fill.style.width = `${progress}%`;
+    messageEl.textContent = `${STAGE_LABELS[stage] || stage}: ${message}`;
+  };
+
+  const finish = (status, progress) => {
+    if (finished) return;
+    finished = true;
+    clearInterval(pollTimer);
+    if (status === "done") {
+      Sound.success();
+      loadResults(jobId);
+    } else if (status === "error") {
+      showError(progress?.error || progress?.message || "Обработка завершилась с ошибкой");
+    }
+  };
+
   const proto = location.protocol === "https:" ? "wss" : "ws";
   const ws = new WebSocket(`${proto}://${location.host}/ws/jobs/${jobId}`);
 
   ws.onmessage = (event) => {
     const data = JSON.parse(event.data);
+    if (finished) return;
     if (data.error) {
       showError(data.error);
       return;
     }
-    const fill = document.getElementById("progress-fill");
-    const message = document.getElementById("progress-message");
-    fill.style.width = `${data.progress}%`;
-    message.textContent = `${STAGE_LABELS[data.stage] || data.stage}: ${data.message}`;
-
-    if (data.stage === "done") {
-      Sound.success();
-      loadResults(jobId);
-    } else if (data.stage === "error") {
-      showError(data.message);
-    }
+    applyProgress(data.stage, data.progress, data.message);
+    if (data.stage === "done") finish("done");
+    else if (data.stage === "error") finish("error", { message: data.message });
   };
+
+  // Fallback in case the websocket message is missed or the connection drops
+  // silently (e.g. the app window was backgrounded) - without this, a job
+  // that actually finished on the backend could leave the UI stuck forever
+  // on the last progress screen it saw.
+  const pollTimer = setInterval(async () => {
+    if (finished) return;
+    try {
+      const res = await fetch(`/api/jobs/${jobId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.status === "done" || data.status === "error") {
+        applyProgress(data.progress.stage, data.progress.progress, data.progress.message);
+        finish(data.status, { error: data.error });
+      }
+    } catch {
+      // network hiccup - just try again on the next tick
+    }
+  }, 4000);
 }
 
 // ---- Screen 5: results ----
