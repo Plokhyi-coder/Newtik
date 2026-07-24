@@ -14,6 +14,7 @@ every run, not just when the user adds text.
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 
 from backend.config.settings import DEFAULT_FONT_PATH, OVERLAY_FONT_SIZE
@@ -23,6 +24,29 @@ from backend.models.schemas import TextOverlayConfig
 logger = logging.getLogger("newtik.overlay")
 
 TARGET_W, TARGET_H = 1080, 1920  # 9:16 - TikTok/Shorts/Reels standard
+
+
+@dataclass(frozen=True)
+class VariationSpec:
+    """One "duplicate" recipe: a combination of crop offset, speed, and color
+    grade distinct enough that the variant doesn't read as an exact copy of
+    the original clip, without being jarring to watch."""
+
+    label: str
+    crop_shift_frac: float  # -1..1, fraction of the available horizontal crop slack
+    speed: float  # 1.0 = unchanged; passed to setpts (video) and atempo (audio)
+    eq: str  # ffmpeg eq= filter argument string ("contrast=..:saturation=..")
+
+
+# Cycled by index when variations_count > len(VARIATION_RECIPES) is disallowed
+# by the schema (max 5), so every requested variant maps to exactly one recipe.
+VARIATION_RECIPES: list[VariationSpec] = [
+    VariationSpec("смещение влево, тёплые тона", -0.6, 1.05, "contrast=1.05:brightness=0.02:saturation=1.15"),
+    VariationSpec("смещение вправо, холодные тона", 0.6, 0.96, "contrast=1.05:saturation=0.9"),
+    VariationSpec("яркие цвета, ускорение", 0.0, 1.08, "contrast=1.15:saturation=1.4"),
+    VariationSpec("выше контраст, лёгкое смещение", -0.3, 1.0, "contrast=1.2:brightness=-0.02"),
+    VariationSpec("приглушённые тона, замедление", 0.3, 0.94, "contrast=0.95:saturation=0.75"),
+]
 
 # Speed vs. quality tradeoff, picked by the user on screen 2 ("Быстрый/Средний/Детальный").
 # ultrafast/high-CRF trades noticeably worse compression efficiency for much faster
@@ -54,15 +78,32 @@ def apply_text_overlay(
     out_path: Path,
     config: TextOverlayConfig,
     quality: str = "medium",
+    variation: VariationSpec | None = None,
 ) -> None:
-    """Writes clip_path center-cropped to 9:16, with `config.text` burned in if set."""
+    """Writes clip_path center-cropped to 9:16, with `config.text` burned in if set.
+
+    `variation`, when given, nudges the crop window off-center, re-grades
+    color via an eq filter, and retimes the clip (video setpts + audio
+    atempo) - enough visual difference between "duplicate" variants that
+    they don't look like the exact same export five times over.
+    """
     out_path.parent.mkdir(parents=True, exist_ok=True)
     preset = QUALITY_PRESETS.get(quality, QUALITY_PRESETS["medium"])
 
     # crop dimensions are expressions ffmpeg evaluates itself (iw/ih = input size),
     # so this works for any source resolution without probing it in Python first.
-    # x/y are omitted, which makes ffmpeg's crop filter center the crop by default.
-    filters = [r"crop='min(iw\,ih*9/16)':'min(ih\,iw*16/9)'", f"scale={TARGET_W}:{TARGET_H}"]
+    crop_w = r"min(iw\,ih*9/16)"
+    crop_h = r"min(ih\,iw*16/9)"
+    shift = variation.crop_shift_frac if variation else 0.0
+    # (iw-crop_w)/2 is the centered offset; the *(1+shift) term nudges it
+    # toward one edge without ever exceeding the available slack.
+    crop_x_expr = f"(iw-{crop_w})/2*(1+({shift}))" if shift else f"(iw-{crop_w})/2"
+    filters = [
+        f"crop='{crop_w}':'{crop_h}':x='{crop_x_expr}':y='(ih-{crop_h})/2'",
+        f"scale={TARGET_W}:{TARGET_H}",
+    ]
+    if variation and variation.eq:
+        filters.append(f"eq={variation.eq}")
 
     textfile_path: Path | None = None
     try:
@@ -90,13 +131,20 @@ def apply_text_overlay(
                 rf"enable='between(t\,{start}\,{end})'"
             )
 
-        run_ffmpeg([
-            "-i", str(clip_path),
-            "-vf", ",".join(filters),
+        # setpts is appended last (after drawtext) so drawtext's between(t,..)
+        # window still refers to the original timeline, not the sped-up one.
+        if variation and variation.speed != 1.0:
+            filters.append(f"setpts=PTS/{variation.speed}")
+
+        args = ["-i", str(clip_path), "-vf", ",".join(filters)]
+        if variation and variation.speed != 1.0:
+            args += ["-af", f"atempo={variation.speed}"]
+        args += [
             "-c:v", "libx264", "-preset", str(preset["preset"]), "-crf", str(preset["crf"]),
             "-c:a", "aac", "-movflags", "+faststart",
             str(out_path),
-        ])
+        ]
+        run_ffmpeg(args)
     finally:
         if textfile_path is not None:
             textfile_path.unlink(missing_ok=True)

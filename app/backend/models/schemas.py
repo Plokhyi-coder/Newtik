@@ -42,7 +42,7 @@ class JobCreateRequest(BaseModel):
     time_range: TimeRange = Field(default_factory=TimeRange)
     clip_length_sec: int = 30
     smart_cut_enabled: bool = False
-    variations_count: int = 0  # reserved, stage 7
+    variations_count: int = Field(default=0, ge=0, le=5)
     subtitles_enabled: bool = False  # reserved, stage 3/6
     quality: QualityMode = QualityMode.MEDIUM
     text_overlay: TextOverlayConfig = Field(default_factory=TextOverlayConfig)

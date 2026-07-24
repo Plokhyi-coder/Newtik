@@ -6,6 +6,7 @@ const state = {
   clipLength: 30,
   smartCut: false,
   quality: "medium",
+  variationsCount: 0,
   overlay: { text: "", position_x: "center", position_y: "center", start_sec: 0, duration_sec: 5 },
   jobId: null,
 };
@@ -150,6 +151,11 @@ document.querySelector("#screen-2 [data-next]").addEventListener("click", () => 
   const len = parseInt(document.getElementById("clip-length").value, 10);
   if (!len || len < 5) return showError("Укажите длину клипа в секундах.");
   state.clipLength = len;
+
+  const variations = parseInt(document.getElementById("variations-count").value, 10) || 0;
+  if (variations < 0 || variations > 5) return showError("Количество вариантов - от 0 до 5.");
+  state.variationsCount = variations;
+
   showScreen("screen-3");
 });
 
@@ -175,7 +181,7 @@ document.getElementById("btn-start").addEventListener("click", async () => {
     time_range: { start_sec: state.rangeStart, end_sec: state.rangeEnd },
     clip_length_sec: state.clipLength,
     smart_cut_enabled: state.smartCut,
-    variations_count: 0,
+    variations_count: state.variationsCount,
     subtitles_enabled: false,
     quality: state.quality,
     text_overlay: state.overlay,

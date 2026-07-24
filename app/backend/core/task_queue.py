@@ -118,6 +118,7 @@ def _run_job(state: JobState, request: JobCreateRequest, title: str) -> None:
 
         clips: list[ClipMeta] = []
         total = len(segments) or 1
+        variations_count = request.variations_count
         for i, seg in enumerate(segments):
             _push_progress(
                 state, JobStage.OVERLAY, int(i / total * 100),
@@ -125,8 +126,6 @@ def _run_job(state: JobState, request: JobCreateRequest, title: str) -> None:
             )
             final_path = clips_dir / f"{seg.clip_id}_final.mp4"
             overlay.apply_text_overlay(seg.file_path, final_path, request.text_overlay, request.quality.value)
-            if seg.file_path != final_path and seg.file_path.exists():
-                seg.file_path.unlink()
 
             thumb_path = thumbs_dir / f"{seg.clip_id}.jpg"
             extract_thumbnail(final_path, thumb_path)
@@ -138,11 +137,43 @@ def _run_job(state: JobState, request: JobCreateRequest, title: str) -> None:
                 file_path=str(final_path.relative_to(job_dir)),
                 thumbnail_path=str(thumb_path.relative_to(job_dir)),
                 potential_score=scores.get(seg.clip_id),
+                variation_index=0,
             ))
             _push_progress(
                 state, JobStage.OVERLAY, int((i + 1) / total * 100),
                 f"клип {i + 1}/{total}",
             )
+
+            # Variants are cut from the same pre-overlay segment as the original,
+            # not the finished file - each gets its own crop/speed/color recipe
+            # independently rather than compounding on top of one another.
+            for v in range(1, variations_count + 1):
+                recipe = overlay.VARIATION_RECIPES[(v - 1) % len(overlay.VARIATION_RECIPES)]
+                _push_progress(
+                    state, JobStage.VARIATIONS,
+                    int(((i * variations_count) + v) / (total * max(variations_count, 1)) * 100),
+                    f"клип {i + 1}/{total}, вариант {v}/{variations_count}",
+                )
+                variant_id = f"{seg.clip_id}_var{v}"
+                variant_path = clips_dir / f"{variant_id}_final.mp4"
+                overlay.apply_text_overlay(
+                    seg.file_path, variant_path, request.text_overlay, request.quality.value, variation=recipe,
+                )
+                variant_thumb = thumbs_dir / f"{variant_id}.jpg"
+                extract_thumbnail(variant_path, variant_thumb)
+                clips.append(ClipMeta(
+                    clip_id=variant_id,
+                    source_start=seg.start,
+                    source_end=seg.end,
+                    file_path=str(variant_path.relative_to(job_dir)),
+                    thumbnail_path=str(variant_thumb.relative_to(job_dir)),
+                    potential_score=scores.get(seg.clip_id),
+                    variation_index=v,
+                    variation_techniques=[recipe.label],
+                ))
+
+            if seg.file_path != final_path and seg.file_path.exists():
+                seg.file_path.unlink()
 
         manifest = JobManifest(
             job_id=job_id,
