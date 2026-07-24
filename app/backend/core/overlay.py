@@ -65,6 +65,7 @@ def apply_text_overlay(clip_path: Path, out_path: Path, config: TextOverlayConfi
         composite = CompositeVideoClip([video, text_clip]).with_duration(video.duration)
         composite.write_videofile(
             str(out_path), codec="libx264", audio_codec="aac", logger=None,
+            preset="veryfast",  # short social clips care about turnaround time, not marginal bitrate savings
         )
         composite.close()
         text_clip.close()

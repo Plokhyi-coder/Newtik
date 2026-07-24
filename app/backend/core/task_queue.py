@@ -100,6 +100,10 @@ def _run_job(state: JobState, request: JobCreateRequest, title: str) -> None:
         clips: list[ClipMeta] = []
         total = len(segments) or 1
         for i, seg in enumerate(segments):
+            _push_progress(
+                state, JobStage.OVERLAY, int(i / total * 100),
+                f"клип {i + 1}/{total} (кодирование...)",
+            )
             final_path = clips_dir / f"{seg.clip_id}_final.mp4"
             overlay.apply_text_overlay(seg.file_path, final_path, request.text_overlay)
             if seg.file_path != final_path and seg.file_path.exists():
