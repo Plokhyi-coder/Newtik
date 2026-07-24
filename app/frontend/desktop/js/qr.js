@@ -18,7 +18,18 @@ const QRPanel = (() => {
       const res = await fetch("/api/network-info");
       const info = await res.json();
       urlInput.value = info.mobile_url;
-      warning.classList.toggle("hidden", info.lan_ip !== "127.0.0.1");
+
+      if (!info.has_lan_ip) {
+        warning.textContent =
+          "Не удалось определить адрес в локальной сети — убедитесь, что Wi-Fi подключён.";
+        warning.classList.remove("hidden");
+      } else if (!info.listening_on_lan) {
+        warning.textContent =
+          "Сервер не отвечает по локальному адресу — попробуйте перезапустить приложение.";
+        warning.classList.remove("hidden");
+      } else {
+        warning.classList.add("hidden");
+      }
     } catch {
       warning.classList.remove("hidden");
     }

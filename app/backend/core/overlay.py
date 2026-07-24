@@ -79,7 +79,6 @@ def apply_text_overlay(
     config: TextOverlayConfig,
     quality: str = "medium",
     variation: VariationSpec | None = None,
-    subtitle_path: Path | None = None,
 ) -> None:
     """Writes clip_path center-cropped to 9:16, with `config.text` burned in if set.
 
@@ -87,11 +86,6 @@ def apply_text_overlay(
     color via an eq filter, and retimes the clip (video setpts + audio
     atempo) - enough visual difference between "duplicate" variants that
     they don't look like the exact same export five times over.
-
-    `subtitle_path`, when given, is an .srt file (see transcriber.py) burned
-    in via libass - only cues that actually contain speech exist in that
-    file (VAD-filtered at transcription time), so silence stays caption-free
-    instead of showing an empty box.
     """
     out_path.parent.mkdir(parents=True, exist_ok=True)
     preset = QUALITY_PRESETS.get(quality, QUALITY_PRESETS["medium"])
@@ -110,10 +104,6 @@ def apply_text_overlay(
     ]
     if variation and variation.eq:
         filters.append(f"eq={variation.eq}")
-
-    if subtitle_path is not None:
-        style = "FontSize=13,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=2,Shadow=0,Alignment=2,MarginV=70"
-        filters.append(f"subtitles=filename='{_escape_ffmpeg_path(str(subtitle_path))}':force_style='{style}'")
 
     textfile_path: Path | None = None
     try:

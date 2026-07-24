@@ -20,18 +20,6 @@ MIN_CLIP_LENGTH_SEC = 15
 MAX_CLIP_LENGTH_SEC = 90
 MIN_LAST_SEGMENT_SEC = 5  # segments shorter than this at the tail are dropped
 
-# Whisper defaults (used from stage 3 onward, kept here so config stays in one place).
-# "medium" (~1.5 GB) is the default: it downloads and loads much faster than
-# large-v3 (~3 GB) with only a modest accuracy drop, and the first subtitle
-# run otherwise silently blocks a job on that download with zero feedback -
-# on a slow connection that can look exactly like the app hanging. Set this
-# to "large-v3" for maximum accuracy if you have a fast connection and don't
-# mind a longer one-time download.
-WHISPER_MODEL = "medium"
-WHISPER_DEVICE = "auto"          # "auto" | "cuda" | "cpu"
-WHISPER_COMPUTE_TYPE_CUDA = "float16"
-WHISPER_COMPUTE_TYPE_CPU = "int8"
-
 # Transfer-to-phone defaults
 TRANSFER_PORT = 8765
 TRANSFER_SESSION_TIMEOUT_SEC = 30 * 60

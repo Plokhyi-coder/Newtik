@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import socket
 
 import qrcode
 from fastapi import APIRouter
@@ -20,7 +21,28 @@ def _mobile_url() -> str:
 
 @router.get("/network-info")
 def network_info() -> dict:
-    return {"lan_ip": get_lan_ip(), "port": API_PORT, "mobile_url": _mobile_url()}
+    lan_ip = get_lan_ip()
+
+    # Connect to our own LAN address the way a phone would. This passes even
+    # when Windows Firewall blocks the port (loopback-ish traffic from the
+    # same host is generally allowed), so it can't prove a phone will get
+    # through - but a failure here does prove the server isn't listening on
+    # the LAN interface at all, which is a different problem worth splitting
+    # out from "firewall is blocking you".
+    listening = False
+    try:
+        with socket.create_connection((lan_ip, API_PORT), timeout=2):
+            listening = True
+    except OSError:
+        listening = False
+
+    return {
+        "lan_ip": lan_ip,
+        "port": API_PORT,
+        "mobile_url": _mobile_url(),
+        "listening_on_lan": listening,
+        "has_lan_ip": not lan_ip.startswith("127."),
+    }
 
 
 @router.get("/qr.png")

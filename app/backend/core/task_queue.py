@@ -1,11 +1,9 @@
 """In-memory job registry + background execution.
 
-MVP runs each job's steps (download -> cut -> overlay) sequentially on a
-worker thread from a ThreadPoolExecutor - subprocess calls (ffmpeg, yt-dlp)
-release the GIL while waiting, which is enough to keep the FastAPI/pywebview
-UI thread responsive without the extra complexity of a process pool. Stage 3
-(faster-whisper) is CPU/GPU-bound *inside* the Python process, so it will
-move onto a ProcessPoolExecutor when it's introduced.
+Each job's steps (download -> cut -> overlay) run sequentially on a worker
+thread from a ThreadPoolExecutor - subprocess calls (ffmpeg, yt-dlp) release
+the GIL while waiting, which is enough to keep the FastAPI/pywebview UI
+thread responsive without the extra complexity of a process pool.
 
 Progress crosses the thread -> asyncio boundary via `loop.call_soon_threadsafe`
 into a per-subscriber asyncio.Queue, consumed by the websocket route.
@@ -21,7 +19,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from backend.config.settings import DOWNLOADS_DIR, JOBS_DIR
-from backend.core import cutter, downloader, highlight_scorer, notifications, overlay, transcriber
+from backend.core import cutter, downloader, highlight_scorer, notifications, overlay
 from backend.core.ffmpeg_utils import extract_thumbnail, probe_duration
 from backend.models.schemas import (
     ClipMeta,
@@ -220,27 +218,6 @@ def _run_job(state: JobState, request: JobCreateRequest, title: str) -> None:
         total = len(segments) or 1
         variations_count = request.variations_count
         for i, seg in enumerate(segments):
-            # Transcribed once per segment (not per variant) and reused - the
-            # variants are re-encodes of the same source audio, so the words
-            # and their timing don't change between them.
-            subtitle_path: Path | None = None
-            if request.subtitles_enabled:
-                hint = (
-                    "распознавание речи..." if transcriber.is_model_loaded()
-                    else "загрузка модели распознавания речи, при первом запуске может занять время..."
-                )
-                _push_progress(
-                    state, JobStage.TRANSCRIBE, int(i / total * 100),
-                    f"клип {i + 1}/{total} ({hint})",
-                )
-                try:
-                    cues = transcriber.transcribe(seg.file_path)
-                    if cues:
-                        subtitle_path = seg.file_path.with_suffix(".srt")
-                        transcriber.write_srt(cues, subtitle_path)
-                except transcriber.TranscriptionError:
-                    logger.exception("Transcription failed for %s - continuing without subtitles", seg.clip_id)
-
             _push_progress(
                 state, JobStage.OVERLAY, int(i / total * 100),
                 f"клип {i + 1}/{total} (кодирование...)",
@@ -248,7 +225,6 @@ def _run_job(state: JobState, request: JobCreateRequest, title: str) -> None:
             final_path = clips_dir / f"{seg.clip_id}_final.mp4"
             overlay.apply_text_overlay(
                 seg.file_path, final_path, request.text_overlay, request.quality.value,
-                subtitle_path=subtitle_path,
             )
 
             thumb_path = thumbs_dir / f"{seg.clip_id}.jpg"
@@ -282,7 +258,7 @@ def _run_job(state: JobState, request: JobCreateRequest, title: str) -> None:
                 variant_path = clips_dir / f"{variant_id}_final.mp4"
                 overlay.apply_text_overlay(
                     seg.file_path, variant_path, request.text_overlay, request.quality.value,
-                    variation=recipe, subtitle_path=subtitle_path,
+                    variation=recipe,
                 )
                 variant_thumb = thumbs_dir / f"{variant_id}.jpg"
                 extract_thumbnail(variant_path, variant_thumb)
@@ -299,8 +275,6 @@ def _run_job(state: JobState, request: JobCreateRequest, title: str) -> None:
 
             if seg.file_path != final_path and seg.file_path.exists():
                 seg.file_path.unlink()
-            if subtitle_path is not None and subtitle_path.exists():
-                subtitle_path.unlink()
 
         manifest = JobManifest(
             job_id=job_id,

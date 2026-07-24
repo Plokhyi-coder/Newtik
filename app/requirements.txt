@@ -8,7 +8,6 @@ send2trash>=1.8
 plyer>=2.1
 
 # Stage 3+ (not yet wired into MVP, listed here so the environment is ready)
-faster-whisper>=1.0
 librosa>=0.10
 pydub>=0.25
 qrcode[pil]>=7.4

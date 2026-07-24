@@ -100,7 +100,27 @@ if "!SKIP_INSTALL!"=="1" (
     if defined NEW_HASH echo !NEW_HASH!>"%REQ_HASH_FILE%"
 )
 
-REM --- Step 5: launch the app ---
+REM --- Step 5: allow inbound connections on the app port so the QR
+REM     phone-transfer page is reachable from other devices on the Wi-Fi.
+REM     Windows Firewall blocks this by default, which makes the QR code
+REM     scan fine but the page never load. Adding the rule needs admin
+REM     rights - without them we just skip it and the desktop app still
+REM     works normally, only QR transfer stays blocked.
+netsh advfirewall firewall show rule name="Newtik" >nul 2>nul
+if not %errorlevel%==0 (
+    netsh advfirewall firewall add rule name="Newtik" dir=in action=allow protocol=TCP localport=8000 >nul 2>nul
+    if !errorlevel!==0 (
+        echo [OK] Firewall rule added - QR transfer to phone will work.
+    ) else (
+        echo [!!] Could not add the firewall rule ^(needs admin rights^).
+        echo      QR transfer to phone may not work until you run this
+        echo      script once as administrator.
+    )
+) else (
+    echo [OK] Firewall rule already present.
+)
+
+REM --- Step 6: launch the app ---
 echo.
 echo [OK] Everything is ready. Launching Newtik...
 echo.

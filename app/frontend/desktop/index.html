@@ -75,6 +75,22 @@
         </svg>
         <span class="nav-label">Задачи</span>
       </button>
+      <button class="nav-item" data-section="accounts">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M4.5 20.5a7.5 7.5 0 0 1 15 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <span class="nav-label">Аккаунты</span>
+      </button>
+      <button class="nav-item" data-section="parser">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 19 V9" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+          <path d="M9.5 19 V5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+          <path d="M15 19 V12" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+          <path d="M20.5 19 V7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+        </svg>
+        <span class="nav-label">Парсинг канала</span>
+      </button>
     </nav>
 
     <div class="sidebar-footer">
@@ -175,14 +191,6 @@
             <div>
               <div>Умная нарезка (захват ключевых моментов)</div>
               <div style="font-size:12px;color:var(--muted)">Границы клипов сдвигаются к тихим местам по звуковой энергии видео. Режим «только лучшие моменты» появится позже.</div>
-            </div>
-          </div>
-
-          <div class="checkbox-row" id="subtitles-row">
-            <input type="checkbox" id="subtitles-checkbox">
-            <div>
-              <div>Субтитры (автоматическое распознавание речи)</div>
-              <div style="font-size:12px;color:var(--muted)">Текст появляется только там, где реально кто-то говорит - в тишине субтитров не будет.</div>
             </div>
           </div>
 
@@ -339,6 +347,11 @@
               <p id="qr-warning" class="hint hidden" style="color:var(--danger)">
                 Не удалось определить адрес в локальной сети — убедитесь, что Wi-Fi подключён.
               </p>
+              <p class="hint" style="margin-top:14px">
+                Если страница не открывается — скорее всего её блокирует брандмауэр Windows.
+                Запустите <b>start.bat</b> один раз от имени администратора: он добавит нужное
+                правило автоматически.
+              </p>
             </div>
           </div>
         </section>
@@ -358,6 +371,112 @@
             <p class="hint">Пока нет ни одной задачи — запустите обработку на вкладке «Залив видео».</p>
           </div>
           <div id="tasks-list"></div>
+        </section>
+      </div>
+
+      <!-- Section: Аккаунты -->
+      <div class="app-section hidden" id="section-accounts">
+        <section class="screen">
+          <div class="screen-header">
+            <div class="screen-icon">
+              <svg class="nav-icon" style="width:27px;height:27px;color:var(--btn-text)" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M4.5 20.5a7.5 7.5 0 0 1 15 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="screen-header-text">
+              <h2>Аккаунты</h2>
+              <p class="hint">Подключите аккаунты для будущего автозалива готовых клипов.</p>
+            </div>
+          </div>
+
+          <div class="platform-grid">
+            <button type="button" class="platform-card" data-platform="tiktok">
+              <span class="platform-logo platform-logo-tiktok">
+                <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M16.5 2h-3v13.2a2.7 2.7 0 1 1-2.2-2.65V9.4a6 6 0 1 0 5.2 5.94V8.9a7.3 7.3 0 0 0 4 1.2V7a4.4 4.4 0 0 1-4-4Z"/>
+                </svg>
+              </span>
+              <span class="platform-name">TikTok</span>
+              <span class="platform-count" data-count="tiktok">0 аккаунтов</span>
+            </button>
+
+            <button type="button" class="platform-card" data-platform="youtube">
+              <span class="platform-logo platform-logo-youtube">
+                <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M21.6 7.2a2.5 2.5 0 0 0-1.76-1.77C18.25 5 12 5 12 5s-6.25 0-7.84.43A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.76 1.77C5.75 19 12 19 12 19s6.25 0 7.84-.43a2.5 2.5 0 0 0 1.76-1.77A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8ZM10 15.2V8.8l5.2 3.2Z"/>
+                </svg>
+              </span>
+              <span class="platform-name">YouTube</span>
+              <span class="platform-count" data-count="youtube">0 аккаунтов</span>
+            </button>
+          </div>
+
+          <div id="accounts-detail" class="accounts-detail hidden">
+            <div class="accounts-detail-head">
+              <h3 id="accounts-detail-title">TikTok</h3>
+              <button type="button" class="icon-btn" id="btn-accounts-back">✕</button>
+            </div>
+            <div class="placeholder-screen">
+              <p class="hint">
+                Здесь появится вход в аккаунт и список подключённых профилей.<br>
+                Автозалив клипов прямо из приложения — в разработке.
+              </p>
+              <button type="button" class="btn" disabled>Добавить аккаунт</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Section: Парсинг канала -->
+      <div class="app-section hidden" id="section-parser">
+        <section class="screen">
+          <div class="screen-header">
+            <div class="screen-icon">
+              <svg class="nav-icon" style="width:27px;height:27px;color:var(--btn-text)" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 19 V9" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+                <path d="M9.5 19 V5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+                <path d="M15 19 V12" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+                <path d="M20.5 19 V7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="screen-header-text">
+              <h2>Парсинг канала</h2>
+              <p class="hint">Вставьте ссылку на канал YouTube или профиль TikTok.</p>
+            </div>
+          </div>
+
+          <div class="input-icon-wrap">
+            <span class="icon-mask" style="mask-image:url(/assets/icon-youtube.svg);-webkit-mask-image:url(/assets/icon-youtube.svg)"></span>
+            <input type="url" id="parser-url" placeholder="https://www.youtube.com/@channel  или  https://www.tiktok.com/@user">
+          </div>
+          <div class="actions" style="margin-top:16px">
+            <button class="btn" id="btn-parse">
+              <span class="btn-icon icon-mask" style="mask-image:url(/assets/icon-sparkle.svg);-webkit-mask-image:url(/assets/icon-sparkle.svg)"></span>Анализировать канал
+            </button>
+          </div>
+
+          <div id="parser-loading" class="placeholder-screen hidden">
+            <p class="hint">Собираем данные канала — это может занять до минуты...</p>
+          </div>
+
+          <div id="parser-result" class="hidden">
+            <div class="channel-head">
+              <img id="channel-avatar" class="channel-avatar" src="" alt="">
+              <div class="channel-name" id="channel-name"></div>
+              <div class="channel-subs" id="channel-subs"></div>
+            </div>
+
+            <button type="button" class="stats-toggle" id="btn-stats-toggle">
+              <span>Общая информация</span>
+              <span class="stats-chevron">▾</span>
+            </button>
+            <div class="stats-panel" id="stats-panel">
+              <div class="stats-panel-inner" id="stats-panel-inner"></div>
+            </div>
+
+            <div class="channel-videos" id="channel-videos"></div>
+          </div>
         </section>
       </div>
     </div>
@@ -418,6 +537,8 @@
 <script src="/js/tasks.js"></script>
 <script src="/js/qr.js"></script>
 <script src="/js/gallery.js"></script>
+<script src="/js/accounts.js"></script>
+<script src="/js/parser.js"></script>
 <script src="/js/notifications.js"></script>
 <script src="/js/app.js"></script>
 </body>

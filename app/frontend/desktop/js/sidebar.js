@@ -4,7 +4,7 @@
  * user resize the sidebar by dragging its right edge (persisted) or collapse
  * it to an icon-only rail.
  */
-const SECTION_IDS = ["upload", "gallery", "qr", "tasks"];
+const SECTION_IDS = ["upload", "gallery", "qr", "tasks", "accounts", "parser"];
 
 function moveNavIndicator(activeItem) {
   const indicator = document.getElementById("nav-indicator");

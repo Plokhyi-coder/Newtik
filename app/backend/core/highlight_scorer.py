@@ -7,11 +7,11 @@ grid cut boundaries toward locally quiet points so a cut doesn't land
 mid-sentence/mid-hit.
 
 Keyword-trigger weighting and pause-after-emphasis detection (the rest of
-the spec's algorithm) need word-level transcript timestamps, which means
-they plug in once faster-whisper transcription is wired in - not yet done,
-so those factors are simply absent from the curve for now rather than
-faked. Everything here is a relative, heuristic "priority" score, not a
-prediction of algorithmic reach - the UI already frames it that way.
+the spec's algorithm) need word-level transcript timestamps, which the
+project no longer produces - so those factors are simply absent from the
+curve rather than faked. Everything here is a relative, heuristic
+"priority" score, not a prediction of algorithmic reach - the UI already
+frames it that way.
 """
 from __future__ import annotations
 
