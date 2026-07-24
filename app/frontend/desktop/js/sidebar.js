@@ -88,8 +88,18 @@ function initSidebarResize() {
   });
 }
 
+function initLogoLink() {
+  const link = document.getElementById("logo-by-link");
+  if (!link) return;
+  link.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.open("https://t.me/plokhyi", "_blank");
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   initSidebarNav();
   initSidebarCollapse();
   initSidebarResize();
+  initLogoLink();
 });

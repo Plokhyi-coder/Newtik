@@ -27,6 +27,7 @@ const Particles = (() => {
   const LEAVES = ["/assets/leaf-green.svg", "/assets/leaf-gold.svg", "/assets/leaf-red.svg"];
   const EMBER = "/assets/ember.svg";
   const MATRIX_CHARS = "アイウエオカキクケコサシスセソタチツテト0123456789";
+  const MATRIX_TOKENS = ["ERROR", "NULL", "0x1F", "404", "SEGV", "0xFF", "WARN"];
 
   function spawnLeaf() {
     const el = document.createElement("img");
@@ -48,10 +49,11 @@ const Particles = (() => {
     el.src = EMBER;
     el.alt = "";
     el.className = "particle particle-spark";
-    const size = 6 + Math.random() * 10;
+    const size = 12 + Math.random() * 16;
     el.style.width = `${size}px`;
     el.style.left = `${Math.random() * 100}vw`;
-    el.style.setProperty("--fall-duration", `${4 + Math.random() * 4}s`);
+    el.style.setProperty("--fall-duration", `${3.5 + Math.random() * 3}s`);
+    el.style.setProperty("--drift", `${(Math.random() * 2 - 1) * 90}px`);
     ensureLayer().appendChild(el);
     el.addEventListener("animationend", () => el.remove());
   }
@@ -60,15 +62,25 @@ const Particles = (() => {
     const target = ensureLayer();
     const columns = Math.floor(window.innerWidth / 24);
     for (let i = 0; i < columns; i++) {
-      if (Math.random() > 0.3) continue; // sparse - a hint of rain, not a wall of text
+      if (Math.random() > 0.5) continue; // sparse-ish - a visible drizzle, not a wall of text
       const col = document.createElement("div");
       col.className = "particle-matrix-col";
       col.style.left = `${i * 24}px`;
       col.style.animationDuration = `${5 + Math.random() * 6}s`;
       col.style.animationDelay = `${-Math.random() * 6}s`;
-      let text = "";
-      for (let j = 0; j < 16; j++) text += MATRIX_CHARS[Math.floor(Math.random() * MATRIX_CHARS.length)] + "\n";
-      col.textContent = text;
+      const lines = [];
+      const tokenLine = Math.floor(Math.random() * 16);
+      for (let j = 0; j < 16; j++) {
+        if (j === tokenLine && Math.random() > 0.4) {
+          lines.push(MATRIX_TOKENS[Math.floor(Math.random() * MATRIX_TOKENS.length)]);
+        } else {
+          lines.push(MATRIX_CHARS[Math.floor(Math.random() * MATRIX_CHARS.length)]);
+        }
+      }
+      // Bright leading glyph reads as the "head" of the falling stream, the
+      // rest trails off dimmer via the base class color/opacity. No line
+      // breaks - vertical-rl already stacks characters top-to-bottom on its own.
+      col.innerHTML = `<span>${lines[0]}</span>${lines.slice(1).join("")}`;
       target.appendChild(col);
     }
   }
@@ -79,7 +91,8 @@ const Particles = (() => {
       spawnLeaf();
       intervalId = setInterval(spawnLeaf, 900);
     } else if (style === "volcano") {
-      intervalId = setInterval(spawnEmber, 400);
+      spawnEmber();
+      intervalId = setInterval(spawnEmber, 280);
     } else if (style === "cyberpunk") {
       startMatrixRain();
     }
