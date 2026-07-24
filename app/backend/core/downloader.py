@@ -15,6 +15,7 @@ clip timing is unaffected.
 from __future__ import annotations
 
 import logging
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from pathlib import Path
 from typing import Callable
 
@@ -26,6 +27,22 @@ from backend.models.schemas import TimeRange, VideoMetadata
 logger = logging.getLogger("newtik.downloader")
 
 ProgressCallback = Callable[[int, str], None]
+
+# YouTube's default ("web") player client needs a JS interpreter to solve its
+# signature/throttling obfuscation, which most machines don't have installed
+# (yt-dlp logs a warning about it and can hang indefinitely resolving actual
+# stream URLs rather than erroring out cleanly). android/ios/tv clients use
+# unobfuscated or differently-handled URLs that don't need JS at all - listing
+# them first means yt-dlp tries those before ever falling back to the
+# JS-dependent web client.
+_EXTRACTOR_ARGS = {"youtube": {"player_client": ["android", "ios", "tv", "web"]}}
+
+# Hard ceiling on the whole download call. A range-limited, resolution-capped
+# clip should never legitimately take this long - this exists purely so a
+# stuck extraction (JS-runtime issues, YouTube-side weirdness, ...) fails
+# loudly with a clear, actionable error instead of hanging the job forever
+# with no way to recover short of restarting the app.
+_DOWNLOAD_TIMEOUT_SEC = 300
 
 # yt-dlp's own retry/warning messages otherwise vanish entirely under quiet=True,
 # which made a real network stall look like a silent, undiagnosable hang - this
@@ -80,6 +97,7 @@ def _format_selector(quality: str | None) -> str:
 def fetch_metadata(url: str) -> VideoMetadata:
     ydl_opts = {
         "quiet": True, "no_warnings": True, "skip_download": True,
+        "extractor_args": _EXTRACTOR_ARGS,
         "logger": _YtdlpLogger(), **_NETWORK_OPTS,
     }
     try:
@@ -127,6 +145,7 @@ def download_video(
         "progress_hooks": [hook],
         "quiet": True,
         "no_warnings": True,
+        "extractor_args": _EXTRACTOR_ARGS,
         "logger": _YtdlpLogger(),
         **_NETWORK_OPTS,
     }
@@ -146,11 +165,32 @@ def download_video(
         quality, (time_range.start_sec, time_range.end_sec) if has_range else "full video",
         ydl_opts["format"],
     )
-    try:
+
+    def _do_download() -> None:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
+
+    # Run on a throwaway thread so a hang can be turned into a clean error
+    # after _DOWNLOAD_TIMEOUT_SEC - yt-dlp gives no way to cancel an
+    # in-progress call, so a genuinely stuck extraction keeps running in the
+    # background even after this raises, but the job itself stops blocking
+    # the user instead of sitting frozen indefinitely.
+    executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="newtik-ytdlp")
+    future = executor.submit(_do_download)
+    try:
+        future.result(timeout=_DOWNLOAD_TIMEOUT_SEC)
+    except FutureTimeoutError as exc:
+        executor.shutdown(wait=False)
+        logger.error("yt-dlp download exceeded %ss - treating as failed", _DOWNLOAD_TIMEOUT_SEC)
+        raise DownloadError(
+            "Скачивание видео заняло слишком много времени и было прервано. "
+            "Проверьте интернет-соединение или попробуйте другое видео."
+        ) from exc
     except yt_dlp.utils.DownloadError as exc:
+        executor.shutdown(wait=False)
         raise DownloadError(f"Не удалось скачать видео (недоступно/приватное?): {exc}") from exc
+    else:
+        executor.shutdown(wait=False)
 
     result = dest_dir / f"{job_id}.mp4"
     if not result.exists():
