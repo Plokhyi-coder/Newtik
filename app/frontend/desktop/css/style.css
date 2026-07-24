@@ -526,6 +526,53 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-gl
 .row { display: flex; gap: 16px; }
 .row > div { flex: 1; }
 
+/* ==========================================================================
+   Trim range slider (screen 1) - drag either thumb to pick the clip range,
+   or click a timecode label to type an exact value.
+   ========================================================================== */
+.range-slider { margin: 46px 4px 40px; }
+.range-slider-track {
+  position: relative;
+  height: 6px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.range-slider-fill {
+  position: absolute; top: 0; height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+}
+.range-thumb-wrap {
+  position: absolute; top: 50%; transform: translate(-50%, -50%);
+  z-index: 1;
+}
+.range-thumb {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid var(--btn-text);
+  box-shadow: 0 0 0 1px var(--accent-glow), 0 2px 8px rgba(0, 0, 0, 0.4);
+  cursor: grab;
+  transition: transform 0.12s ease;
+}
+.range-thumb:hover { transform: scale(1.12); }
+.range-thumb.dragging { cursor: grabbing; transform: scale(1.2); }
+
+input.range-time-input {
+  position: absolute; bottom: calc(100% + 10px); left: 50%;
+  transform: translateX(-50%);
+  width: 76px; padding: 5px 4px;
+  border-radius: calc(var(--radius) * 0.4);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 12px;
+  text-align: center;
+  outline: none;
+}
+input.range-time-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+
 .btn {
   display: inline-block;
   position: relative;

@@ -111,7 +111,8 @@ document.getElementById("btn-analyze").addEventListener("click", async () => {
     document.getElementById("preview-title").textContent = metadata.title;
     document.getElementById("preview-duration").textContent =
       "Длительность: " + formatDuration(metadata.duration_sec);
-    document.getElementById("range-row").style.display = "flex";
+    document.getElementById("range-row").style.display = "block";
+    RangeSlider.init(metadata.duration_sec);
   } catch (e) {
     showError(e.message);
   } finally {
@@ -123,15 +124,8 @@ document.getElementById("btn-analyze").addEventListener("click", async () => {
 document.getElementById("btn-to-screen-2").addEventListener("click", () => {
   if (!state.metadata) return showError("Сначала проанализируйте видео.");
 
-  const startRaw = document.getElementById("range-start").value;
-  const endRaw = document.getElementById("range-end").value;
-  const start = parseTimecode(startRaw);
-  const end = parseTimecode(endRaw);
-  const duration = state.metadata.duration_sec;
-
-  if (start !== null && (start < 0 || start > duration)) return showError("«С» вне длительности видео.");
-  if (end !== null && (end < 0 || end > duration)) return showError("«По» вне длительности видео.");
-  if (start !== null && end !== null && end <= start) return showError("«По» должно быть больше «С».");
+  const { start, end } = RangeSlider.getRange();
+  if (end <= start) return showError("«По» должно быть больше «С».");
 
   state.rangeStart = start;
   state.rangeEnd = end;

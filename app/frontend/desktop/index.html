@@ -126,14 +126,20 @@
             </div>
           </div>
 
-          <div class="row" id="range-row" style="display:none">
-            <div>
-              <label for="range-start">С (чч:мм:сс, необязательно)</label>
-              <input type="text" id="range-start" placeholder="00:00:00">
-            </div>
-            <div>
-              <label for="range-end">По (чч:мм:сс, необязательно)</label>
-              <input type="text" id="range-end" placeholder="00:00:00">
+          <div id="range-row" style="display:none">
+            <label>Отрезок для нарезки</label>
+            <div class="range-slider" id="range-slider">
+              <div class="range-slider-track" id="range-track">
+                <div class="range-slider-fill" id="range-fill"></div>
+                <div class="range-thumb-wrap" id="thumb-wrap-start">
+                  <input type="text" class="range-time-input" id="range-label-start" value="00:00:00" inputmode="numeric">
+                  <div class="range-thumb" id="range-thumb-start"></div>
+                </div>
+                <div class="range-thumb-wrap" id="thumb-wrap-end">
+                  <input type="text" class="range-time-input" id="range-label-end" value="00:00:00" inputmode="numeric">
+                  <div class="range-thumb" id="range-thumb-end"></div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -338,6 +344,7 @@
 <script src="/js/sound.js"></script>
 <script src="/js/particles.js"></script>
 <script src="/js/sidebar.js"></script>
+<script src="/js/range-slider.js"></script>
 <script src="/shared/clip-card.js"></script>
 <script src="/js/app.js"></script>
 </body>
