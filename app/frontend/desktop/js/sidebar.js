@@ -31,6 +31,11 @@ function switchSection(sectionId) {
     else Tasks.stop();
   }
   if (sectionId === "qr" && typeof QRPanel !== "undefined") QRPanel.refresh();
+
+  if (typeof Gallery !== "undefined") {
+    if (sectionId === "gallery") Gallery.start();
+    else document.getElementById("gallery-video")?.pause();
+  }
 }
 
 function initSidebarNav() {

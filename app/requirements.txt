@@ -4,6 +4,7 @@ pydantic>=2.7
 pywebview>=5.2
 yt-dlp>=2024.8.6
 python-multipart>=0.0.9
+send2trash>=1.8
 
 # Stage 3+ (not yet wired into MVP, listed here so the environment is ready)
 faster-whisper>=1.0

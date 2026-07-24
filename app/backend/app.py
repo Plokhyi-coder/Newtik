@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from backend.api import routes_job, routes_network, routes_project, routes_results, ws_progress
+from backend.api import routes_gallery, routes_job, routes_network, routes_project, routes_results, ws_progress
 from backend.config.settings import APP_DIR, LOGS_DIR
 from backend.core import task_queue
 from backend.core.ffmpeg_utils import ensure_ffmpeg_on_path
@@ -43,6 +43,7 @@ def create_app() -> FastAPI:
     app.include_router(routes_job.router)
     app.include_router(routes_results.router)
     app.include_router(routes_network.router)
+    app.include_router(routes_gallery.router)
     app.include_router(ws_progress.router)
 
     @app.get("/favicon.ico", include_in_schema=False)

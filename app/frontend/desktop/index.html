@@ -285,10 +285,46 @@
 
       <!-- Section: Галерея (placeholder) -->
       <div class="app-section hidden" id="section-gallery">
-        <div class="screen placeholder-screen">
-          <div class="screen-icon" style="width:64px;height:64px;border-radius:16px;"><span class="icon-mask" style="width:32px;height:32px;mask-image:url(/assets/icon-gallery.svg);-webkit-mask-image:url(/assets/icon-gallery.svg)"></span></div>
-          <h2>Галерея</h2>
-          <p class="hint">История всех обработанных видео появится здесь — в разработке.</p>
+        <section class="screen">
+          <div class="screen-header">
+            <div class="screen-icon"><span class="icon-mask" style="mask-image:url(/assets/icon-gallery.svg);-webkit-mask-image:url(/assets/icon-gallery.svg)"></span></div>
+            <div class="screen-header-text">
+              <h2>Галерея</h2>
+              <p class="hint" id="gallery-breadcrumb">Все обработанные видео</p>
+            </div>
+          </div>
+
+          <div class="gallery-toolbar">
+            <button type="button" class="btn btn-ghost hidden" id="gallery-back">
+              <span class="btn-icon icon-mask" style="mask-image:url(/assets/icon-arrow-left.svg);-webkit-mask-image:url(/assets/icon-arrow-left.svg)"></span>Назад
+            </button>
+            <div class="gallery-toolbar-spacer"></div>
+            <select id="gallery-sort" class="gallery-sort-select">
+              <option value="recent">Сначала недавние</option>
+              <option value="oldest">Сначала давние</option>
+              <option value="size">По размеру</option>
+            </select>
+          </div>
+
+          <div id="gallery-empty" class="placeholder-screen hidden">
+            <p class="hint">Здесь появятся папки с готовыми видео после первой обработки.</p>
+          </div>
+          <div id="gallery-grid" class="gallery-grid"></div>
+        </section>
+      </div>
+
+      <!-- Right-click menu shared by gallery folders/files -->
+      <div id="gallery-context-menu" class="context-menu hidden">
+        <button type="button" data-action="open">Открыть</button>
+        <button type="button" data-action="reveal">Открыть на устройстве</button>
+        <button type="button" data-action="delete">Удалить</button>
+      </div>
+
+      <!-- Inline video player for double-clicked clips -->
+      <div id="gallery-video-overlay" class="video-overlay hidden">
+        <div class="video-overlay-inner">
+          <button type="button" id="gallery-video-close" class="icon-btn">✕</button>
+          <video id="gallery-video" controls autoplay></video>
         </div>
       </div>
 
@@ -381,6 +417,7 @@
 <script src="/js/range-slider.js"></script>
 <script src="/js/tasks.js"></script>
 <script src="/js/qr.js"></script>
+<script src="/js/gallery.js"></script>
 <script src="/shared/clip-card.js"></script>
 <script src="/js/app.js"></script>
 </body>
