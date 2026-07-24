@@ -18,13 +18,41 @@ logger = logging.getLogger("newtik.downloader")
 
 ProgressCallback = Callable[[int, str], None]
 
+# yt-dlp's own retry/warning messages otherwise vanish entirely under quiet=True,
+# which made a real network stall look like a silent, undiagnosable hang - this
+# routes them into app.log instead so a stuck job leaves a trail to look at.
+class _YtdlpLogger:
+    def debug(self, msg: str) -> None:
+        logger.debug("[yt-dlp] %s", msg)
+
+    def info(self, msg: str) -> None:
+        logger.info("[yt-dlp] %s", msg)
+
+    def warning(self, msg: str) -> None:
+        logger.warning("[yt-dlp] %s", msg)
+
+    def error(self, msg: str) -> None:
+        logger.error("[yt-dlp] %s", msg)
+
+
+# Bounds how long a stalled connection can hang for before yt-dlp gives up and
+# raises, instead of retrying (near-)indefinitely with zero visible progress.
+_NETWORK_OPTS = {
+    "socket_timeout": 30,
+    "retries": 5,
+    "fragment_retries": 5,
+}
+
 
 class DownloadError(RuntimeError):
     """Raised for user-facing download failures (private/unavailable video, no network, ...)."""
 
 
 def fetch_metadata(url: str) -> VideoMetadata:
-    ydl_opts = {"quiet": True, "no_warnings": True, "skip_download": True}
+    ydl_opts = {
+        "quiet": True, "no_warnings": True, "skip_download": True,
+        "logger": _YtdlpLogger(), **_NETWORK_OPTS,
+    }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
@@ -68,6 +96,8 @@ def download_video(
         "progress_hooks": [hook],
         "quiet": True,
         "no_warnings": True,
+        "logger": _YtdlpLogger(),
+        **_NETWORK_OPTS,
     }
 
     has_range = time_range and (time_range.start_sec is not None or time_range.end_sec is not None)
