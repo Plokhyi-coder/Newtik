@@ -5,6 +5,7 @@ const state = {
   rangeEnd: null,
   clipLength: 30,
   smartCut: false,
+  subtitlesEnabled: false,
   quality: "medium",
   variationsCount: 0,
   overlay: { text: "", position_x: "center", position_y: "center", start_sec: 0, duration_sec: 5 },
@@ -138,6 +139,10 @@ document.getElementById("smart-cut-checkbox").addEventListener("change", (e) => 
   state.smartCut = e.target.checked;
 });
 
+document.getElementById("subtitles-checkbox").addEventListener("change", (e) => {
+  state.subtitlesEnabled = e.target.checked;
+});
+
 document.querySelectorAll("#quality-row .quality-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     document.querySelectorAll("#quality-row .quality-btn").forEach((b) => b.classList.remove("selected"));
@@ -182,7 +187,7 @@ document.getElementById("btn-start").addEventListener("click", async () => {
     clip_length_sec: state.clipLength,
     smart_cut_enabled: state.smartCut,
     variations_count: state.variationsCount,
-    subtitles_enabled: false,
+    subtitles_enabled: state.subtitlesEnabled,
     quality: state.quality,
     text_overlay: state.overlay,
   };
