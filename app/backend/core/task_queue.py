@@ -143,8 +143,22 @@ def create_job(request: JobCreateRequest, title: str, thumbnail_url: str | None 
     )
     _jobs[job_id] = state
     _persist_meta(state)
-    _executor.submit(_run_job, state, request, title)
+    _submit(state, request, title)
     return state
+
+
+def _submit(state: JobState, request: JobCreateRequest, title: str) -> None:
+    global _executor
+    try:
+        _executor.submit(_run_job, state, request, title)
+    except RuntimeError:
+        # The pool can end up dead (interpreter-shutdown races, a previous
+        # worker crash, ...) while this API process itself stays alive and
+        # keeps serving requests - rebuild it instead of forcing a full app
+        # restart just to submit one more job.
+        logger.warning("Job executor was dead - recreating it", exc_info=True)
+        _executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="newtik-job")
+        _executor.submit(_run_job, state, request, title)
 
 
 def _push_progress(state: JobState, stage: JobStage, progress: int, message: str) -> None:
@@ -210,9 +224,13 @@ def _run_job(state: JobState, request: JobCreateRequest, title: str) -> None:
             # and their timing don't change between them.
             subtitle_path: Path | None = None
             if request.subtitles_enabled:
+                hint = (
+                    "распознавание речи..." if transcriber.is_model_loaded()
+                    else "загрузка модели распознавания речи, при первом запуске может занять время..."
+                )
                 _push_progress(
                     state, JobStage.TRANSCRIBE, int(i / total * 100),
-                    f"клип {i + 1}/{total} (распознавание речи...)",
+                    f"клип {i + 1}/{total} ({hint})",
                 )
                 try:
                     cues = transcriber.transcribe(seg.file_path)

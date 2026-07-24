@@ -44,6 +44,10 @@ def _resolve_device() -> str:
         return "cpu"
 
 
+def is_model_loaded() -> bool:
+    return _model is not None
+
+
 def _get_model():
     global _model
     if _model is not None:
@@ -53,7 +57,11 @@ def _get_model():
 
     device = _resolve_device()
     compute_type = WHISPER_COMPUTE_TYPE_CUDA if device == "cuda" else WHISPER_COMPUTE_TYPE_CPU
-    logger.info("Loading Whisper model %s on %s (%s)", WHISPER_MODEL, device, compute_type)
+    logger.info(
+        "Loading Whisper model %s on %s (%s) - if this isn't cached locally yet, "
+        "it downloads now and can take a while depending on connection speed",
+        WHISPER_MODEL, device, compute_type,
+    )
     _model = WhisperModel(WHISPER_MODEL, device=device, compute_type=compute_type)
     return _model
 
