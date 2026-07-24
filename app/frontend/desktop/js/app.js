@@ -29,7 +29,7 @@ function showScreen(id) {
       el.classList.add("hidden");
     }
   }
-  document.querySelectorAll(".steps .dot").forEach((dot, i) => {
+  document.querySelectorAll(".wizard-steps .dot").forEach((dot, i) => {
     dot.classList.toggle("active", i === newIndex);
     dot.classList.toggle("done", i < newIndex);
   });
@@ -58,7 +58,11 @@ function spawnRipple(target, clientX, clientY) {
 }
 
 document.addEventListener("click", (e) => {
-  const interactive = e.target.closest(".btn, .icon-btn, .position-grid .cell, .swatch, .style-card");
+  // .sound-pack-btn is excluded here - its own handler in theme.js already
+  // plays the specific pack being previewed, so this would double up the sound.
+  const interactive = e.target.closest(
+    ".btn, .icon-btn, .position-grid .cell, .swatch, .shade-btn, .style-card, .quality-btn, .nav-item"
+  );
   if (!interactive) return;
   Sound.click();
   if (interactive.classList.contains("btn")) spawnRipple(interactive, e.clientX, e.clientY);

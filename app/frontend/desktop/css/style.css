@@ -1,10 +1,32 @@
 /* ==========================================================================
+   Display font (headings, nav, buttons) - self-hosted, OFL-licensed, no
+   internet dependency at runtime. Body copy keeps the per-style --font.
+   ========================================================================== */
+@font-face {
+  font-family: "Golos Text";
+  src: url("/assets/fonts/golos-text-500.woff2") format("woff2");
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Golos Text";
+  src: url("/assets/fonts/golos-text-700.woff2") format("woff2");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Golos Text";
+  src: url("/assets/fonts/golos-text-800.woff2") format("woff2");
+  font-weight: 800; font-style: normal; font-display: swap;
+}
+
+/* ==========================================================================
    Base tokens. Color themes below only touch --accent*; visual styles below
    only touch --bg/--surface*/--radius/--font/--shadow-btn - the two layers
-   never fight over the same property, so any of the 6 colors combines
-   cleanly with any of the 4 styles (24 combinations).
+   never fight over the same property. Minimal is the only style with a free
+   choice of 6 accent colors; the other 3 styles each have exactly 3 fixed
+   shades (--data-shade="1|2|3") instead - see the shade blocks below.
    ========================================================================== */
 :root {
+  --font-display: "Golos Text", var(--font);
   /* Tells WebView2/Edge/Chromium this page is already dark-themed, so their
      "force dark mode for web content" heuristic leaves our colors alone -
      without this, that heuristic can selectively re-invert elements like
@@ -29,32 +51,75 @@
   --btn-text: #ffffff;
 }
 
-/* ================= Color themes (6) =================
+/* ================= Color themes (6, MINIMAL ONLY) =================
+   The other 3 styles each have exactly 3 fixed shades instead - see below.
    --btn-text stays white except on the two themes bright enough that white
    text loses contrast (amber, mint) - those get near-black button text. */
-:root[data-theme-color="violet"] {
+:root[data-style="minimal"][data-theme-color="violet"] {
   --accent: #8b6bff; --accent-dark: #6c4de0; --accent-2: #33d69f;
   --accent-glow: rgba(139, 107, 255, 0.18); --btn-text: #ffffff;
 }
-:root[data-theme-color="coral"] {
+:root[data-style="minimal"][data-theme-color="coral"] {
   --accent: #ff6b5c; --accent-dark: #e0503f; --accent-2: #ffd166;
   --accent-glow: rgba(255, 107, 92, 0.18); --btn-text: #ffffff;
 }
-:root[data-theme-color="mint"] {
+:root[data-style="minimal"][data-theme-color="mint"] {
   --accent: #14e0c4; --accent-dark: #0fb89f; --accent-2: #8b6bff;
   --accent-glow: rgba(20, 224, 196, 0.18); --btn-text: #06261f;
 }
-:root[data-theme-color="amber"] {
+:root[data-style="minimal"][data-theme-color="amber"] {
   --accent: #ffb020; --accent-dark: #dd9412; --accent-2: #ff5c8a;
   --accent-glow: rgba(255, 176, 32, 0.18); --btn-text: #241a04;
 }
-:root[data-theme-color="ocean"] {
+:root[data-style="minimal"][data-theme-color="ocean"] {
   --accent: #3aa0ff; --accent-dark: #2c7dd6; --accent-2: #33d69f;
   --accent-glow: rgba(58, 160, 255, 0.18); --btn-text: #ffffff;
 }
-:root[data-theme-color="magenta"] {
+:root[data-style="minimal"][data-theme-color="magenta"] {
   --accent: #ff3ec8; --accent-dark: #d928a6; --accent-2: #8b6bff;
   --accent-glow: rgba(255, 62, 200, 0.18); --btn-text: #ffffff;
+}
+
+/* ================= Per-style shades (3 each, forest/cyberpunk/volcano) =================
+   data-shade is "1" (dark) / "2" (mid) / "3" (bright). Minimal ignores this
+   entirely and uses the free 6-color picker above instead. */
+:root[data-style="forest"][data-shade="1"] {
+  --accent: #2f6b3a; --accent-dark: #234f2b; --accent-2: #7fe07a;
+  --accent-glow: rgba(47, 107, 58, 0.22); --btn-text: #ffffff;
+}
+:root[data-style="forest"][data-shade="2"] {
+  --accent: #4f9e52; --accent-dark: #3a7a3d; --accent-2: #c8e86a;
+  --accent-glow: rgba(79, 158, 82, 0.22); --btn-text: #ffffff;
+}
+:root[data-style="forest"][data-shade="3"] {
+  --accent: #7fe07a; --accent-dark: #5cbf58; --accent-2: #eaff8f;
+  --accent-glow: rgba(127, 224, 122, 0.24); --btn-text: #0b2b0d;
+}
+
+:root[data-style="cyberpunk"][data-shade="1"] {
+  --accent: #5b3fae; --accent-dark: #432e82; --accent-2: #28e0ff;
+  --accent-glow: rgba(91, 63, 174, 0.24); --btn-text: #ffffff;
+}
+:root[data-style="cyberpunk"][data-shade="2"] {
+  --accent: #8b5cf6; --accent-dark: #6c3fd6; --accent-2: #ff2ec4;
+  --accent-glow: rgba(139, 92, 246, 0.24); --btn-text: #ffffff;
+}
+:root[data-style="cyberpunk"][data-shade="3"] {
+  --accent: #c084fc; --accent-dark: #a35cf0; --accent-2: #28e0ff;
+  --accent-glow: rgba(192, 132, 252, 0.26); --btn-text: #1c0a2e;
+}
+
+:root[data-style="volcano"][data-shade="1"] {
+  --accent: #8c1f1f; --accent-dark: #641414; --accent-2: #ff7a1a;
+  --accent-glow: rgba(140, 31, 31, 0.24); --btn-text: #ffffff;
+}
+:root[data-style="volcano"][data-shade="2"] {
+  --accent: #e8452c; --accent-dark: #b8331e; --accent-2: #ffb020;
+  --accent-glow: rgba(232, 69, 44, 0.24); --btn-text: #ffffff;
+}
+:root[data-style="volcano"][data-shade="3"] {
+  --accent: #ffa632; --accent-dark: #e0841a; --accent-2: #ff5c1a;
+  --accent-glow: rgba(255, 166, 50, 0.26); --btn-text: #2b1300;
 }
 
 /* ================= Visual styles (4) ================= */
@@ -76,11 +141,11 @@
   --font: "Segoe UI", system-ui, sans-serif;
   --shadow-btn: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
-:root[data-style="arcade"] {
-  --bg: #08070c; --surface: #151220; --surface-2: #1d1830; --border: #3a2f57;
-  --radius: 2px; --clip-corner: 0px;
-  --font: "Courier New", monospace;
-  --shadow-btn: 4px 4px 0 var(--accent-dark);
+:root[data-style="volcano"] {
+  --bg: #0c0605; --surface: #1c0f0b; --surface-2: #26130d; --border: #4a2318;
+  --radius: 10px; --clip-corner: 8px;
+  --font: "Segoe UI", system-ui, sans-serif;
+  --shadow-btn: 0 8px 20px rgba(0, 0, 0, 0.5), 0 0 20px -6px var(--accent-glow);
 }
 
 * { box-sizing: border-box; }
@@ -99,6 +164,25 @@ body {
   transition: background 0.4s ease;
 }
 
+/* ==========================================================================
+   Full-bleed photographic background per style (real photos, not CSS art -
+   forest/cyberpunk/volcano each get one; minimal stays plain by design).
+   A dark gradient sits on top of the photo for text contrast, both fixed
+   and behind everything (#shell sits at z-index 1).
+   ========================================================================== */
+.bg-image-layer {
+  position: fixed; inset: 0; z-index: -2;
+  background-size: cover; background-position: center;
+  opacity: 0; transition: opacity 0.5s ease;
+}
+.bg-image-layer::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(6, 8, 10, 0.6), rgba(6, 8, 10, 0.82));
+}
+:root[data-style="forest"] .bg-image-layer { background-image: url("/assets/backgrounds/bg-forest.jpg"); opacity: 1; }
+:root[data-style="cyberpunk"] .bg-image-layer { background-image: url("/assets/backgrounds/bg-cyberpunk.jpg"); opacity: 1; }
+:root[data-style="volcano"] .bg-image-layer { background-image: url("/assets/backgrounds/bg-volcano.jpg"); opacity: 1; }
+
 /* Decorative full-page overlays per visual style - purely cosmetic, never intercepts clicks */
 body::before, body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 999; }
 
@@ -110,27 +194,114 @@ body::before, body::after { content: ""; position: fixed; inset: 0; pointer-even
   background: linear-gradient(180deg, transparent 85%, rgba(0, 0, 0, 0.35));
 }
 
-:root[data-style="arcade"] body::before {
-  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0px, rgba(255, 255, 255, 0.05) 1px, transparent 1px, transparent 3px);
-  mix-blend-mode: overlay;
+:root[data-style="volcano"] body::before {
+  background: radial-gradient(ellipse at 50% 100%, rgba(255, 122, 26, 0.10), transparent 60%);
+  animation: ember-glow-pulse 4s ease-in-out infinite;
 }
-:root[data-style="arcade"] body::after {
-  background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.5));
+:root[data-style="volcano"] body::after {
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.45));
+}
+@keyframes ember-glow-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
 }
 
-:root[data-style="forest"] body::before {
-  background:
-    radial-gradient(circle at 6% 10%, rgba(120, 190, 120, 0.10), transparent 40%),
-    radial-gradient(circle at 94% 88%, rgba(90, 150, 90, 0.12), transparent 45%);
+/* ==========================================================================
+   Shell: resizable sidebar + main content pane
+   ========================================================================== */
+#shell { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+#sidebar {
+  width: var(--sidebar-width, 260px);
+  min-width: 72px;
+  flex-shrink: 0;
+  background: rgba(10, 12, 16, 0.55);
+  backdrop-filter: blur(10px);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  padding: 20px 14px;
+  position: relative;
+  transition: width 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+#sidebar.collapsed { width: 76px; }
+#sidebar.resizing { transition: none; }
+
+.sidebar-header { display: flex; align-items: center; gap: 10px; padding: 4px 8px 20px; }
+.sidebar-logo-icon {
+  width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 16px -2px var(--accent);
+}
+.sidebar-logo-icon .icon-mask { width: 18px; height: 18px; background-color: var(--btn-text); }
+.sidebar-logo-text { overflow: hidden; white-space: nowrap; }
+.sidebar-logo-title { font-family: var(--font-display); font-weight: 800; font-size: 19px; letter-spacing: 0.2px; }
+.sidebar-logo-title span { color: var(--accent); }
+.sidebar-logo-sub { font-size: 11px; color: var(--muted); margin-top: -2px; }
+#sidebar.collapsed .sidebar-logo-text, #sidebar.collapsed .nav-label, #sidebar.collapsed .sidebar-collapse-btn span {
+  display: none;
+}
+
+.sidebar-collapse-btn {
+  margin-left: auto; width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+  border: 1px solid var(--border); background: var(--surface-2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.sidebar-collapse-btn .icon-mask { width: 14px; height: 14px; background-color: var(--text); transition: transform 0.25s ease; }
+#sidebar.collapsed .sidebar-collapse-btn .icon-mask { transform: rotate(180deg); }
+
+.sidebar-nav { position: relative; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.nav-indicator {
+  position: absolute; left: 0; width: 100%; height: 52px;
+  background: var(--accent); border-radius: 12px;
+  box-shadow: 0 0 20px -4px var(--accent);
+  transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 0;
+}
+
+.nav-item {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: 12px;
+  height: 52px; padding: 0 14px; border-radius: 12px;
+  border: none; background: transparent; cursor: pointer;
+  color: var(--muted); text-align: left; width: 100%;
+  font-family: var(--font-display); font-weight: 700; font-size: 14px;
+  transition: color 0.2s ease;
+}
+.nav-item .icon-mask { width: 20px; height: 20px; background-color: var(--muted); flex-shrink: 0; transition: background-color 0.2s ease; }
+.nav-item:hover { color: var(--text); }
+.nav-item:hover .icon-mask { background-color: var(--text); }
+.nav-item.active { color: var(--btn-text); }
+.nav-item.active .icon-mask { background-color: var(--btn-text); }
+.nav-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.sidebar-footer { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 10px; }
+
+.sidebar-resize-handle {
+  position: absolute; top: 0; right: -3px; width: 6px; height: 100%;
+  cursor: ew-resize; z-index: 5;
+}
+.sidebar-resize-handle:hover, .sidebar-resize-handle.dragging { background: var(--accent-glow); }
+
+#main-content {
+  flex: 1; min-width: 0; overflow-y: auto;
+  padding: 32px 40px 64px;
 }
 
 #app {
-  max-width: 960px;
+  max-width: 900px;
   margin: 0 auto;
-  padding: 32px 24px 64px;
   position: relative;
   z-index: 1;
 }
+
+.app-section.hidden { display: none; }
+
+.placeholder-screen {
+  text-align: center; padding: 80px 20px; color: var(--muted);
+}
+.placeholder-screen .screen-icon { margin: 0 auto 20px; }
+.placeholder-screen h2 { margin-bottom: 8px; }
 
 /* ==========================================================================
    Ambient particle layer (js/particles.js) - sits behind #app so falling
@@ -168,23 +339,8 @@ body::before, body::after { content: ""; position: fixed; inset: 0; pointer-even
   to { transform: translateY(200%); }
 }
 
-header.top-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 28px;
-}
-
-header.top-bar .logo {
-  font-weight: 700;
-  font-size: 20px;
-  letter-spacing: 0.5px;
-}
-
-header.top-bar .logo span { color: var(--accent); }
-
-:root[data-style="cyberpunk"] header.top-bar .logo span,
-:root[data-style="arcade"] header.top-bar .logo span {
+:root[data-style="cyberpunk"] .sidebar-logo-title span,
+:root[data-style="volcano"] .sidebar-logo-title span {
   text-shadow: 0 0 10px var(--accent);
 }
 
@@ -197,20 +353,19 @@ header.top-bar .logo span { color: var(--accent); }
 }
 .icon-btn:hover { border-color: var(--accent); transform: rotate(20deg); }
 
-.steps {
+.wizard-steps {
   display: flex;
   gap: 6px;
-  margin-left: auto;
-  margin-right: 6px;
+  margin-bottom: 20px;
 }
 
-.steps .dot {
+.wizard-steps .dot {
   width: 8px; height: 8px; border-radius: 50%;
   background: var(--border);
   transition: background 0.3s ease, box-shadow 0.3s ease;
 }
-.steps .dot.active { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
-.steps .dot.done { background: var(--accent-2); }
+.wizard-steps .dot.active { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+.wizard-steps .dot.done { background: var(--accent-2); }
 
 .screen {
   position: relative;
@@ -294,19 +449,17 @@ header.top-bar .logo span { color: var(--accent); }
   transform: scaleX(-1);
 }
 
-:root[data-style="arcade"] .screen::before, :root[data-style="arcade"] .settings-panel::before {
-  display: block; top: -3px; left: -3px; width: 22px; height: 22px;
-  background-image: url("/assets/pixel-bracket.svg");
-  image-rendering: pixelated;
+:root[data-style="volcano"] .screen::before, :root[data-style="volcano"] .settings-panel::before {
+  display: block; top: -4px; left: -4px; width: 40px; height: 40px;
+  background-image: url("/assets/lava-crack-corner.svg");
 }
-:root[data-style="arcade"] .screen::after, :root[data-style="arcade"] .settings-panel::after {
-  display: block; top: -3px; right: -3px; width: 22px; height: 22px;
-  background-image: url("/assets/pixel-bracket.svg");
-  image-rendering: pixelated;
+:root[data-style="volcano"] .screen::after, :root[data-style="volcano"] .settings-panel::after {
+  display: block; top: -4px; right: -4px; width: 40px; height: 40px;
+  background-image: url("/assets/lava-crack-corner.svg");
   transform: scaleX(-1);
 }
 
-:root[data-style="cyberpunk"] header.top-bar .logo span { animation: glitch-flicker 6s infinite; }
+:root[data-style="cyberpunk"] .sidebar-logo-title span { animation: glitch-flicker 6s infinite; }
 @keyframes glitch-flicker {
   0%, 92%, 100% { opacity: 1; transform: none; text-shadow: 0 0 10px var(--accent); }
   93% { opacity: 0.6; transform: translateX(-1px); text-shadow: 2px 0 #ff2ec4, -2px 0 #28e0ff; }
@@ -394,13 +547,9 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-gl
   to { transform: scale(2.6); opacity: 0; }
 }
 
-/* Cyberpunk & arcade: hard neon/pixel edges instead of soft rounding */
+/* Cyberpunk: hard neon glow. Volcano: molten glow that intensifies on hover. */
 :root[data-style="cyberpunk"] .btn:hover { box-shadow: 0 0 22px var(--accent); }
-:root[data-style="arcade"] .btn {
-  clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
-}
-:root[data-style="arcade"] .btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--accent-dark); }
-:root[data-style="arcade"] .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--accent-dark); }
+:root[data-style="volcano"] .btn:hover { box-shadow: 0 0 24px var(--accent), 0 4px 14px rgba(0, 0, 0, 0.5); }
 
 .actions { margin-top: 26px; display: flex; justify-content: space-between; gap: 12px; }
 
@@ -551,11 +700,45 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-gl
 .style-card:hover { border-color: var(--accent); color: var(--text); }
 .style-card.selected { border-color: var(--accent); background: var(--accent-glow); color: var(--text); }
 
+/* Shade picker (3 fixed shades) shown instead of the 6-swatch row for every
+   style except minimal - only minimal gets a free choice of accent color. */
+.shade-row { display: none; gap: 12px; margin-top: 8px; }
+.shade-row.visible { display: flex; }
+.shade-btn {
+  flex: 1; height: 52px; border-radius: calc(var(--radius) * 0.6);
+  border: 2px solid transparent; cursor: pointer; position: relative;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.shade-btn:hover { transform: translateY(-2px); }
+.shade-btn.selected { border-color: var(--text); }
+.shade-btn.selected::after {
+  content: "✓"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 16px; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+.hidden-row { display: none !important; }
+
+.sound-pack-row { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.sound-pack-btn {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: calc(var(--radius) * 0.6);
+  padding: 10px 14px; cursor: pointer; color: var(--text); font-size: 13px;
+  transition: all 0.15s ease;
+}
+.sound-pack-btn:hover { border-color: var(--accent); }
+.sound-pack-btn.selected { border-color: var(--accent); background: var(--accent-glow); }
+.sound-pack-btn .play-icon {
+  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+  background: var(--accent); display: flex; align-items: center; justify-content: center;
+}
+.sound-pack-btn .play-icon .icon-mask { width: 10px; height: 10px; background-color: var(--btn-text); }
+
 .sound-toggle-row {
   display: flex; align-items: center; justify-content: space-between;
   margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);
   font-size: 14px;
 }
+
+.settings-section-label { font-size: 14px; color: var(--muted); margin: 18px 0 6px; display: block; }
 
 .switch { position: relative; display: inline-block; width: 42px; height: 24px; }
 .switch input { opacity: 0; width: 0; height: 0; }

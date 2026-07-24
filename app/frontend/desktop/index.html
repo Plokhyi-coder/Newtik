@@ -10,196 +10,270 @@
 <script src="/js/theme.js"></script>
 </head>
 <body>
-<div id="app">
-  <header class="top-bar">
-    <div class="logo">new<span>tik</span></div>
-    <div class="steps">
-      <div class="dot" data-step="1"></div>
-      <div class="dot" data-step="2"></div>
-      <div class="dot" data-step="3"></div>
-      <div class="dot" data-step="4"></div>
-      <div class="dot" data-step="5"></div>
-    </div>
-    <button class="icon-btn" id="btn-settings" title="Оформление">⚙</button>
-  </header>
+<div class="bg-image-layer"></div>
 
-  <div class="error-banner hidden" id="error-banner"></div>
-
-  <!-- Screen 1: URL + range -->
-  <section class="screen" id="screen-1">
-    <div class="screen-header">
-      <div class="screen-icon"><span class="icon-mask" style="mask-image:url(/assets/icon-link.svg);-webkit-mask-image:url(/assets/icon-link.svg)"></span></div>
-      <div class="screen-header-text">
-        <h2>Ссылка на видео</h2>
-        <p class="hint">Вставьте ссылку на YouTube-видео и нажмите «Анализировать».</p>
+<div id="shell">
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo-icon"><span class="icon-mask" style="mask-image:url(/assets/icon-upload-play.svg);-webkit-mask-image:url(/assets/icon-upload-play.svg)"></span></div>
+      <div class="sidebar-logo-text">
+        <div class="sidebar-logo-title">new<span>tik</span></div>
+        <div class="sidebar-logo-sub">видео-нарезчик</div>
       </div>
-    </div>
-    <label for="url-input">Ссылка</label>
-    <div class="input-icon-wrap">
-      <span class="icon-mask" style="mask-image:url(/assets/icon-youtube.svg);-webkit-mask-image:url(/assets/icon-youtube.svg)"></span>
-      <input type="url" id="url-input" placeholder="https://www.youtube.com/watch?v=...">
-    </div>
-
-    <div id="video-preview" class="video-preview" style="display:none">
-      <img id="preview-thumb" src="" alt="">
-      <div class="meta">
-        <div class="title" id="preview-title"></div>
-        <div id="preview-duration"></div>
-      </div>
-    </div>
-
-    <div class="row" id="range-row" style="display:none">
-      <div>
-        <label for="range-start">С (чч:мм:сс, необязательно)</label>
-        <input type="text" id="range-start" placeholder="00:00:00">
-      </div>
-      <div>
-        <label for="range-end">По (чч:мм:сс, необязательно)</label>
-        <input type="text" id="range-end" placeholder="00:00:00">
-      </div>
-    </div>
-
-    <div class="actions">
-      <button class="btn" id="btn-analyze">
-        <span class="btn-icon icon-mask" style="mask-image:url(/assets/icon-sparkle.svg);-webkit-mask-image:url(/assets/icon-sparkle.svg)"></span>Анализировать
-      </button>
-      <button class="btn btn-ghost" id="btn-to-screen-2">
-        Далее<span class="btn-icon icon-mask btn-icon-after" style="mask-image:url(/assets/icon-arrow-right.svg);-webkit-mask-image:url(/assets/icon-arrow-right.svg)"></span>
-      </button>
-    </div>
-  </section>
-
-  <!-- Screen 2: clip length + smart cutting + quality mode + variations (reserved) -->
-  <section class="screen hidden" id="screen-2">
-    <div class="screen-header">
-      <div class="screen-icon"><span class="icon-mask" style="mask-image:url(/assets/icon-scissors.svg);-webkit-mask-image:url(/assets/icon-scissors.svg)"></span></div>
-      <div class="screen-header-text">
-        <h2>Параметры нарезки</h2>
-        <p class="hint">Длина клипов, формат под TikTok/Shorts и скорость обработки.</p>
-      </div>
-    </div>
-    <label for="clip-length">Длина одного клипа (сек)</label>
-    <input type="number" id="clip-length" min="15" max="90" value="30">
-
-    <div class="checkbox-row" id="smart-cut-row">
-      <input type="checkbox" id="smart-cut-checkbox">
-      <div>
-        <div>Умная нарезка (захват ключевых моментов)</div>
-        <div style="font-size:12px;color:var(--muted)">Границы клипов сдвигаются к тихим местам по звуковой энергии видео. Режим «только лучшие моменты» появится позже.</div>
-      </div>
-    </div>
-
-    <label>Скорость / качество обработки</label>
-    <div class="quality-row" id="quality-row">
-      <button type="button" class="quality-btn" data-quality="fast">
-        <span class="quality-title">Быстрый</span>
-        <span class="quality-sub">Ниже качество, максимум скорости</span>
-      </button>
-      <button type="button" class="quality-btn selected" data-quality="medium">
-        <span class="quality-title">Средний</span>
-        <span class="quality-sub">Баланс скорости и качества</span>
-      </button>
-      <button type="button" class="quality-btn" data-quality="detailed">
-        <span class="quality-title">Детальный</span>
-        <span class="quality-sub">Выше качество, дольше обработка</span>
+      <button class="sidebar-collapse-btn" id="btn-sidebar-collapse" title="Свернуть/развернуть">
+        <span class="icon-mask" style="mask-image:url(/assets/icon-collapse.svg);-webkit-mask-image:url(/assets/icon-collapse.svg)"></span>
       </button>
     </div>
 
-    <label for="variations-count">Количество дополнительных вариантов на клип</label>
-    <input type="number" id="variations-count" min="0" max="0" value="0" disabled>
-    <p class="hint">Стилевые вариации (кроп/скорость/цвет) появятся на следующем этапе разработки.</p>
-
-    <div class="actions">
-      <button class="btn btn-ghost" data-back>
-        <span class="btn-icon icon-mask" style="mask-image:url(/assets/icon-arrow-left.svg);-webkit-mask-image:url(/assets/icon-arrow-left.svg)"></span>Назад
+    <nav class="sidebar-nav" id="sidebar-nav">
+      <div class="nav-indicator" id="nav-indicator"></div>
+      <button class="nav-item active" data-section="upload">
+        <span class="icon-mask" style="mask-image:url(/assets/icon-upload-play.svg);-webkit-mask-image:url(/assets/icon-upload-play.svg)"></span>
+        <span class="nav-label">Залив видео</span>
       </button>
-      <button class="btn" data-next>
-        Далее<span class="btn-icon icon-mask btn-icon-after" style="mask-image:url(/assets/icon-arrow-right.svg);-webkit-mask-image:url(/assets/icon-arrow-right.svg)"></span>
+      <button class="nav-item" data-section="gallery">
+        <span class="icon-mask" style="mask-image:url(/assets/icon-gallery.svg);-webkit-mask-image:url(/assets/icon-gallery.svg)"></span>
+        <span class="nav-label">Галерея</span>
       </button>
-    </div>
-  </section>
-
-  <!-- Screen 3 (spec screen 4): additional text overlay -->
-  <section class="screen hidden" id="screen-3">
-    <div class="screen-header">
-      <div class="screen-icon"><span class="icon-mask" style="mask-image:url(/assets/icon-type.svg);-webkit-mask-image:url(/assets/icon-type.svg)"></span></div>
-      <div class="screen-header-text">
-        <h2>Дополнительный текст</h2>
-        <p class="hint">Текст, время появления и позиция на кадре.</p>
-      </div>
-    </div>
-    <label for="overlay-text">Текст на видео</label>
-    <input type="text" id="overlay-text" placeholder="Подписку и лайк!">
-
-    <label>Позиция на кадре</label>
-    <div class="position-grid" id="position-grid">
-      <div class="cell" data-x="left" data-y="top">Верх-лево</div>
-      <div class="cell" data-x="center" data-y="top">Верх-центр</div>
-      <div class="cell" data-x="right" data-y="top">Верх-право</div>
-      <div class="cell" data-x="left" data-y="center">Центр-лево</div>
-      <div class="cell selected" data-x="center" data-y="center">Центр</div>
-      <div class="cell" data-x="right" data-y="center">Центр-право</div>
-      <div class="cell" data-x="left" data-y="bottom">Низ-лево</div>
-      <div class="cell" data-x="center" data-y="bottom">Низ-центр</div>
-      <div class="cell" data-x="right" data-y="bottom">Низ-право</div>
-    </div>
-
-    <div class="row">
-      <div>
-        <label for="overlay-start">Появление, сек от начала клипа</label>
-        <input type="number" id="overlay-start" min="0" value="0">
-      </div>
-      <div>
-        <label for="overlay-duration">Длительность показа, сек</label>
-        <input type="number" id="overlay-duration" min="0" value="5">
-      </div>
-    </div>
-
-    <div class="actions">
-      <button class="btn btn-ghost" data-back>
-        <span class="btn-icon icon-mask" style="mask-image:url(/assets/icon-arrow-left.svg);-webkit-mask-image:url(/assets/icon-arrow-left.svg)"></span>Назад
+      <button class="nav-item" data-section="qr">
+        <span class="icon-mask" style="mask-image:url(/assets/icon-qr.svg);-webkit-mask-image:url(/assets/icon-qr.svg)"></span>
+        <span class="nav-label">QR-передача на телефон</span>
       </button>
-      <button class="btn" id="btn-start">
-        <span class="btn-icon icon-mask" style="mask-image:url(/assets/icon-sparkle.svg);-webkit-mask-image:url(/assets/icon-sparkle.svg)"></span>Начать обработку
+      <button class="nav-item" data-section="tasks">
+        <span class="icon-mask" style="mask-image:url(/assets/icon-tasks.svg);-webkit-mask-image:url(/assets/icon-tasks.svg)"></span>
+        <span class="nav-label">Задачи</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="nav-item" id="btn-settings">
+        <span class="icon-mask" style="mask-image:url(/assets/icon-theme.svg);-webkit-mask-image:url(/assets/icon-theme.svg)"></span>
+        <span class="nav-label">Тема</span>
       </button>
     </div>
-  </section>
 
-  <!-- Screen 4: processing -->
-  <section class="screen hidden" id="screen-4">
-    <div class="screen-header">
-      <div class="screen-icon"><span class="icon-mask" style="mask-image:url(/assets/icon-clock.svg);-webkit-mask-image:url(/assets/icon-clock.svg)"></span></div>
-      <div class="screen-header-text">
-        <h2>Обработка видео</h2>
-        <p class="hint" id="stage-list">Скачивание → Нарезка → Наложение текста → Готово</p>
+    <div class="sidebar-resize-handle" id="sidebar-resize-handle"></div>
+  </aside>
+
+  <main id="main-content">
+    <div id="app">
+      <div class="error-banner hidden" id="error-banner"></div>
+
+      <!-- Section: Залив видео (existing wizard) -->
+      <div class="app-section" id="section-upload">
+        <div class="wizard-steps" id="wizard-steps">
+          <div class="dot" data-step="1"></div>
+          <div class="dot" data-step="2"></div>
+          <div class="dot" data-step="3"></div>
+          <div class="dot" data-step="4"></div>
+          <div class="dot" data-step="5"></div>
+        </div>
+
+        <!-- Screen 1: URL + range -->
+        <section class="screen" id="screen-1">
+          <div class="screen-header">
+            <div class="screen-icon"><span class="icon-mask" style="mask-image:url(/assets/icon-link.svg);-webkit-mask-image:url(/assets/icon-link.svg)"></span></div>
+            <div class="screen-header-text">
+              <h2>Ссылка на видео</h2>
+              <p class="hint">Вставьте ссылку на YouTube-видео и нажмите «Анализировать».</p>
+            </div>
+          </div>
+          <label for="url-input">Ссылка</label>
+          <div class="input-icon-wrap">
+            <span class="icon-mask" style="mask-image:url(/assets/icon-youtube.svg);-webkit-mask-image:url(/assets/icon-youtube.svg)"></span>
+            <input type="url" id="url-input" placeholder="https://www.youtube.com/watch?v=...">
+          </div>
+
+          <div id="video-preview" class="video-preview" style="display:none">
+            <img id="preview-thumb" src="" alt="">
+            <div class="meta">
+              <div class="title" id="preview-title"></div>
+              <div id="preview-duration"></div>
+            </div>
+          </div>
+
+          <div class="row" id="range-row" style="display:none">
+            <div>
+              <label for="range-start">С (чч:мм:сс, необязательно)</label>
+              <input type="text" id="range-start" placeholder="00:00:00">
+            </div>
+            <div>
+              <label for="range-end">По (чч:мм:сс, необязательно)</label>
+              <input type="text" id="range-end" placeholder="00:00:00">
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn" id="btn-analyze">
+              <span class="btn-icon icon-mask" style="mask-image:url(/assets/icon-sparkle.svg);-webkit-mask-image:url(/assets/icon-sparkle.svg)"></span>Анализировать
+            </button>
+            <button class="btn btn-ghost" id="btn-to-screen-2">
+              Далее<span class="btn-icon icon-mask btn-icon-after" style="mask-image:url(/assets/icon-arrow-right.svg);-webkit-mask-image:url(/assets/icon-arrow-right.svg)"></span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Screen 2: clip length + smart cutting + quality mode + variations (reserved) -->
+        <section class="screen hidden" id="screen-2">
+          <div class="screen-header">
+            <div class="screen-icon"><span class="icon-mask" style="mask-image:url(/assets/icon-scissors.svg);-webkit-mask-image:url(/assets/icon-scissors.svg)"></span></div>
+            <div class="screen-header-text">
+              <h2>Параметры нарезки</h2>
+              <p class="hint">Длина клипов, формат под TikTok/Shorts и скорость обработки.</p>
+            </div>
+          </div>
+          <label for="clip-length">Длина одного клипа (сек)</label>
+          <input type="number" id="clip-length" min="15" max="90" value="30">
+
+          <div class="checkbox-row" id="smart-cut-row">
+            <input type="checkbox" id="smart-cut-checkbox">
+            <div>
+              <div>Умная нарезка (захват ключевых моментов)</div>
+              <div style="font-size:12px;color:var(--muted)">Границы клипов сдвигаются к тихим местам по звуковой энергии видео. Режим «только лучшие моменты» появится позже.</div>
+            </div>
+          </div>
+
+          <label>Скорость / качество обработки</label>
+          <div class="quality-row" id="quality-row">
+            <button type="button" class="quality-btn" data-quality="fast">
+              <span class="quality-title">Быстрый</span>
+              <span class="quality-sub">Ниже качество, максимум скорости</span>
+            </button>
+            <button type="button" class="quality-btn selected" data-quality="medium">
+              <span class="quality-title">Средний</span>
+              <span class="quality-sub">Баланс скорости и качества</span>
+            </button>
+            <button type="button" class="quality-btn" data-quality="detailed">
+              <span class="quality-title">Детальный</span>
+              <span class="quality-sub">Выше качество, дольше обработка</span>
+            </button>
+          </div>
+
+          <label for="variations-count">Количество дополнительных вариантов на клип</label>
+          <input type="number" id="variations-count" min="0" max="0" value="0" disabled>
+          <p class="hint">Стилевые вариации (кроп/скорость/цвет) появятся на следующем этапе разработки.</p>
+
+          <div class="actions">
+            <button class="btn btn-ghost" data-back>
+              <span class="btn-icon icon-mask" style="mask-image:url(/assets/icon-arrow-left.svg);-webkit-mask-image:url(/assets/icon-arrow-left.svg)"></span>Назад
+            </button>
+            <button class="btn" data-next>
+              Далее<span class="btn-icon icon-mask btn-icon-after" style="mask-image:url(/assets/icon-arrow-right.svg);-webkit-mask-image:url(/assets/icon-arrow-right.svg)"></span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Screen 3 (spec screen 4): additional text overlay -->
+        <section class="screen hidden" id="screen-3">
+          <div class="screen-header">
+            <div class="screen-icon"><span class="icon-mask" style="mask-image:url(/assets/icon-type.svg);-webkit-mask-image:url(/assets/icon-type.svg)"></span></div>
+            <div class="screen-header-text">
+              <h2>Дополнительный текст</h2>
+              <p class="hint">Текст, время появления и позиция на кадре.</p>
+            </div>
+          </div>
+          <label for="overlay-text">Текст на видео</label>
+          <input type="text" id="overlay-text" placeholder="Подписку и лайк!">
+
+          <label>Позиция на кадре</label>
+          <div class="position-grid" id="position-grid">
+            <div class="cell" data-x="left" data-y="top">Верх-лево</div>
+            <div class="cell" data-x="center" data-y="top">Верх-центр</div>
+            <div class="cell" data-x="right" data-y="top">Верх-право</div>
+            <div class="cell" data-x="left" data-y="center">Центр-лево</div>
+            <div class="cell selected" data-x="center" data-y="center">Центр</div>
+            <div class="cell" data-x="right" data-y="center">Центр-право</div>
+            <div class="cell" data-x="left" data-y="bottom">Низ-лево</div>
+            <div class="cell" data-x="center" data-y="bottom">Низ-центр</div>
+            <div class="cell" data-x="right" data-y="bottom">Низ-право</div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label for="overlay-start">Появление, сек от начала клипа</label>
+              <input type="number" id="overlay-start" min="0" value="0">
+            </div>
+            <div>
+              <label for="overlay-duration">Длительность показа, сек</label>
+              <input type="number" id="overlay-duration" min="0" value="5">
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-ghost" data-back>
+              <span class="btn-icon icon-mask" style="mask-image:url(/assets/icon-arrow-left.svg);-webkit-mask-image:url(/assets/icon-arrow-left.svg)"></span>Назад
+            </button>
+            <button class="btn" id="btn-start">
+              <span class="btn-icon icon-mask" style="mask-image:url(/assets/icon-sparkle.svg);-webkit-mask-image:url(/assets/icon-sparkle.svg)"></span>Начать обработку
+            </button>
+          </div>
+        </section>
+
+        <!-- Screen 4: processing -->
+        <section class="screen hidden" id="screen-4">
+          <div class="screen-header">
+            <div class="screen-icon"><span class="icon-mask" style="mask-image:url(/assets/icon-clock.svg);-webkit-mask-image:url(/assets/icon-clock.svg)"></span></div>
+            <div class="screen-header-text">
+              <h2>Обработка видео</h2>
+              <p class="hint" id="stage-list">Скачивание → Нарезка → Наложение текста → Готово</p>
+            </div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
+            <div class="progress-stage" id="progress-message">Ожидание...</div>
+          </div>
+        </section>
+
+        <!-- Screen 5: results -->
+        <section class="screen hidden" id="screen-5">
+          <div class="screen-header">
+            <div class="screen-icon"><span class="icon-mask" style="mask-image:url(/assets/icon-check.svg);-webkit-mask-image:url(/assets/icon-check.svg)"></span></div>
+            <div class="screen-header-text">
+              <h2>Готовые клипы</h2>
+              <p class="hint">Скачайте отдельные клипы или всё сразу архивом.</p>
+            </div>
+          </div>
+          <div class="results-toolbar">
+            <a class="btn btn-cta" id="btn-download-all">
+              <span class="btn-icon icon-mask" style="mask-image:url(/assets/icon-download.svg);-webkit-mask-image:url(/assets/icon-download.svg)"></span>Скачать всё (zip)
+            </a>
+            <button class="btn btn-ghost" id="btn-restart">Обработать другое видео</button>
+          </div>
+          <div id="clips-container"></div>
+        </section>
+      </div>
+
+      <!-- Section: Галерея (placeholder) -->
+      <div class="app-section hidden" id="section-gallery">
+        <div class="screen placeholder-screen">
+          <div class="screen-icon" style="width:64px;height:64px;border-radius:16px;"><span class="icon-mask" style="width:32px;height:32px;mask-image:url(/assets/icon-gallery.svg);-webkit-mask-image:url(/assets/icon-gallery.svg)"></span></div>
+          <h2>Галерея</h2>
+          <p class="hint">История всех обработанных видео появится здесь — в разработке.</p>
+        </div>
+      </div>
+
+      <!-- Section: QR-передача (placeholder) -->
+      <div class="app-section hidden" id="section-qr">
+        <div class="screen placeholder-screen">
+          <div class="screen-icon" style="width:64px;height:64px;border-radius:16px;"><span class="icon-mask" style="width:32px;height:32px;mask-image:url(/assets/icon-qr.svg);-webkit-mask-image:url(/assets/icon-qr.svg)"></span></div>
+          <h2>Передача на телефон</h2>
+          <p class="hint">Раздача клипов по Wi-Fi через QR-код появится здесь — в разработке.</p>
+        </div>
+      </div>
+
+      <!-- Section: Задачи (placeholder) -->
+      <div class="app-section hidden" id="section-tasks">
+        <div class="screen placeholder-screen">
+          <div class="screen-icon" style="width:64px;height:64px;border-radius:16px;"><span class="icon-mask" style="width:32px;height:32px;mask-image:url(/assets/icon-tasks.svg);-webkit-mask-image:url(/assets/icon-tasks.svg)"></span></div>
+          <h2>Задачи</h2>
+          <p class="hint">Очередь фоновых обработок появится здесь — в разработке.</p>
+        </div>
       </div>
     </div>
-    <div class="progress-wrap">
-      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
-      <div class="progress-stage" id="progress-message">Ожидание...</div>
-    </div>
-  </section>
-
-  <!-- Screen 5: results -->
-  <section class="screen hidden" id="screen-5">
-    <div class="screen-header">
-      <div class="screen-icon"><span class="icon-mask" style="mask-image:url(/assets/icon-check.svg);-webkit-mask-image:url(/assets/icon-check.svg)"></span></div>
-      <div class="screen-header-text">
-        <h2>Готовые клипы</h2>
-        <p class="hint">Скачайте отдельные клипы или всё сразу архивом.</p>
-      </div>
-    </div>
-    <div class="results-toolbar">
-      <a class="btn btn-cta" id="btn-download-all">
-        <span class="btn-icon icon-mask" style="mask-image:url(/assets/icon-download.svg);-webkit-mask-image:url(/assets/icon-download.svg)"></span>Скачать всё (zip)
-      </a>
-      <button class="btn btn-ghost" id="btn-restart">Обработать другое видео</button>
-    </div>
-    <div id="clips-container"></div>
-  </section>
+  </main>
 </div>
 
-<!-- Appearance settings: color theme + visual style, see js/theme.js -->
+<!-- Appearance settings: color theme + visual style + sounds, see js/theme.js -->
 <div class="settings-overlay hidden" id="settings-overlay">
   <div class="settings-panel">
     <div class="settings-header">
@@ -207,11 +281,15 @@
       <button class="icon-btn" id="btn-settings-close">✕</button>
     </div>
 
-    <label>Цветовая тема</label>
-    <div class="swatch-row" id="swatch-row"></div>
-
     <label>Визуальный стиль</label>
     <div class="style-grid" id="style-grid"></div>
+
+    <span class="settings-section-label" id="color-section-label">Цветовая тема</span>
+    <div class="swatch-row" id="swatch-row"></div>
+    <div class="shade-row" id="shade-row"></div>
+
+    <span class="settings-section-label hidden-row" id="sound-pack-label">Звук кнопок</span>
+    <div class="sound-pack-row hidden-row" id="sound-pack-row"></div>
 
     <div class="sound-toggle-row">
       <span>Звуки интерфейса</span>
@@ -225,6 +303,7 @@
 
 <script src="/js/sound.js"></script>
 <script src="/js/particles.js"></script>
+<script src="/js/sidebar.js"></script>
 <script src="/shared/clip-card.js"></script>
 <script src="/js/app.js"></script>
 </body>

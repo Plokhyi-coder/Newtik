@@ -1,8 +1,8 @@
 /*
  * Ambient background particles per visual style - falling leaves (forest),
- * digital rain (cyberpunk), floating pixel sparks (arcade). The layer sits
- * behind #app (z-index 0) so particles only ever show in the empty margin
- * around the card, never over readable text or controls.
+ * digital rain (cyberpunk), rising embers (volcano). The layer sits behind
+ * #app (z-index 0) so particles only ever show in the empty margin around
+ * the card, never over readable text or controls.
  */
 const Particles = (() => {
   let layer = null;
@@ -25,7 +25,7 @@ const Particles = (() => {
   }
 
   const LEAVES = ["/assets/leaf-green.svg", "/assets/leaf-gold.svg", "/assets/leaf-red.svg"];
-  const SPARKS = ["/assets/pixel-spark-pink.svg", "/assets/pixel-spark-cyan.svg", "/assets/pixel-spark-yellow.svg"];
+  const EMBER = "/assets/ember.svg";
   const MATRIX_CHARS = "アイウエオカキクケコサシスセソタチツテト0123456789";
 
   function spawnLeaf() {
@@ -43,15 +43,15 @@ const Particles = (() => {
     el.addEventListener("animationend", () => el.remove());
   }
 
-  function spawnSpark() {
+  function spawnEmber() {
     const el = document.createElement("img");
-    el.src = SPARKS[Math.floor(Math.random() * SPARKS.length)];
+    el.src = EMBER;
     el.alt = "";
     el.className = "particle particle-spark";
-    const size = 7 + Math.random() * 7;
+    const size = 6 + Math.random() * 10;
     el.style.width = `${size}px`;
     el.style.left = `${Math.random() * 100}vw`;
-    el.style.setProperty("--fall-duration", `${3.5 + Math.random() * 3}s`);
+    el.style.setProperty("--fall-duration", `${4 + Math.random() * 4}s`);
     ensureLayer().appendChild(el);
     el.addEventListener("animationend", () => el.remove());
   }
@@ -78,8 +78,8 @@ const Particles = (() => {
     if (style === "forest") {
       spawnLeaf();
       intervalId = setInterval(spawnLeaf, 900);
-    } else if (style === "arcade") {
-      intervalId = setInterval(spawnSpark, 450);
+    } else if (style === "volcano") {
+      intervalId = setInterval(spawnEmber, 400);
     } else if (style === "cyberpunk") {
       startMatrixRain();
     }

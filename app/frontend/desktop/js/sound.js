@@ -1,7 +1,11 @@
 /*
- * Retro/8-bit UI sound engine built entirely on the Web Audio API oscillator -
- * no audio files to ship, so the app keeps working fully offline. Square/
- * sawtooth waves are the classic chiptune button-blip timbre.
+ * UI sound engine built entirely on the Web Audio API - no audio files to
+ * ship, so the app keeps working fully offline. Each non-minimal style has
+ * 3 selectable button-click "packs" with a distinct, thematic timbre (wood
+ * knock / rustle / chime for forest, digital blip / laser / glitch for
+ * cyberpunk, rumble / crackle / rock-clack for volcano) - picked in the
+ * Тема panel, remembered per style. Minimal has no sound pack choice, just
+ * a neutral default click.
  */
 const Sound = (() => {
   let ctx = null;
@@ -29,9 +33,8 @@ const Sound = (() => {
     osc.stop(t0 + duration + 0.02);
   }
 
-  // Filtered white noise burst - a soft "whoosh"/rustle rather than a tone,
-  // used for the forest theme's screen-transition sound.
-  function noiseBurst({ duration = 0.35, filterFreq = 1200, q = 0.7, gain = 0.06, delay = 0 }) {
+  // Filtered noise burst - a soft "whoosh"/rustle/crackle rather than a tone.
+  function noiseBurst({ duration = 0.35, filterFreq = 1200, q = 0.7, type = "bandpass", gain = 0.06, delay = 0 }) {
     if (muted) return;
     const c = ensureContext();
     const t0 = c.currentTime + delay;
@@ -43,12 +46,12 @@ const Sound = (() => {
     const noise = c.createBufferSource();
     noise.buffer = buffer;
     const filter = c.createBiquadFilter();
-    filter.type = "bandpass";
+    filter.type = type;
     filter.frequency.value = filterFreq;
     filter.Q.value = q;
     const amp = c.createGain();
     amp.gain.setValueAtTime(0, t0);
-    amp.gain.linearRampToValueAtTime(gain, t0 + duration * 0.25);
+    amp.gain.linearRampToValueAtTime(gain, t0 + duration * 0.2);
     amp.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
 
     noise.connect(filter).connect(amp).connect(c.destination);
@@ -56,9 +59,65 @@ const Sound = (() => {
     noise.stop(t0 + duration + 0.02);
   }
 
+  // --- Themed click packs: style -> pack id -> recipe ---
+  const CLICK_PACKS = {
+    forest: {
+      "0": () => { // wood knock
+        tone({ freq: 200, duration: 0.05, type: "triangle", gain: 0.06 });
+        tone({ freq: 140, duration: 0.09, type: "triangle", gain: 0.05, delay: 0.03 });
+      },
+      "1": () => { // leaf rustle
+        noiseBurst({ duration: 0.22, filterFreq: 2200, q: 0.9, gain: 0.05 });
+      },
+      "2": () => { // wooden chime
+        tone({ freq: 523, duration: 0.18, type: "triangle", gain: 0.045 });
+        tone({ freq: 659, duration: 0.22, type: "triangle", gain: 0.035, delay: 0.02 });
+      },
+    },
+    cyberpunk: {
+      "0": () => { // digital blip (the original default click)
+        tone({ freq: 740, duration: 0.06, type: "square", gain: 0.045, glideTo: 520 });
+      },
+      "1": () => { // laser pulse
+        tone({ freq: 1800, duration: 0.1, type: "sawtooth", gain: 0.04, glideTo: 180 });
+      },
+      "2": () => { // glitch stutter
+        tone({ freq: 900, duration: 0.03, type: "square", gain: 0.045 });
+        tone({ freq: 700, duration: 0.03, type: "square", gain: 0.04, delay: 0.045 });
+        tone({ freq: 1000, duration: 0.02, type: "square", gain: 0.035, delay: 0.08 });
+      },
+    },
+    volcano: {
+      "0": () => { // low rumble
+        tone({ freq: 90, duration: 0.16, type: "sine", gain: 0.07 });
+        tone({ freq: 70, duration: 0.2, type: "sine", gain: 0.05, delay: 0.04 });
+      },
+      "1": () => { // ember crackle
+        noiseBurst({ duration: 0.12, filterFreq: 3200, q: 1.2, type: "highpass", gain: 0.05 });
+        noiseBurst({ duration: 0.08, filterFreq: 4000, q: 1.5, type: "highpass", gain: 0.04, delay: 0.05 });
+      },
+      "2": () => { // rock clack
+        tone({ freq: 260, duration: 0.04, type: "square", gain: 0.055 });
+        noiseBurst({ duration: 0.06, filterFreq: 1800, q: 1, gain: 0.04 });
+      },
+    },
+  };
+
+  function currentStyle() {
+    return document.documentElement.getAttribute("data-style") || "minimal";
+  }
+
   return {
-    click() { tone({ freq: 740, duration: 0.06, type: "square", gain: 0.045, glideTo: 520 }); },
-    toggle() { tone({ freq: 480, duration: 0.05, type: "square", gain: 0.04, glideTo: 720 }); },
+    click(styleOverride, packOverride) {
+      const style = styleOverride || currentStyle();
+      const pack = CLICK_PACKS[style];
+      if (!pack) {
+        tone({ freq: 740, duration: 0.06, type: "square", gain: 0.045, glideTo: 520 });
+        return;
+      }
+      const packId = packOverride ?? ThemeManager.currentSoundPack(style);
+      (pack[packId] || pack["0"])();
+    },
     success() {
       tone({ freq: 523, duration: 0.09, type: "square", gain: 0.05 });
       tone({ freq: 659, duration: 0.09, type: "square", gain: 0.05, delay: 0.09 });
@@ -68,17 +127,16 @@ const Sound = (() => {
       tone({ freq: 220, duration: 0.12, type: "sawtooth", gain: 0.05 });
       tone({ freq: 160, duration: 0.2, type: "sawtooth", gain: 0.05, delay: 0.1 });
     },
-    // Themed accent played on every screen transition, on top of the click blip.
+    // Themed accent played on every screen transition, on top of the click sound.
     transition(style) {
       if (style === "forest") {
         noiseBurst({ duration: 0.4, filterFreq: 1400, gain: 0.045 });
       } else if (style === "cyberpunk") {
         tone({ freq: 1500, duration: 0.05, type: "square", gain: 0.025, glideTo: 260 });
-      } else if (style === "arcade") {
-        tone({ freq: 660, duration: 0.05, type: "square", gain: 0.035 });
-        tone({ freq: 990, duration: 0.07, type: "square", gain: 0.035, delay: 0.05 });
+      } else if (style === "volcano") {
+        tone({ freq: 100, duration: 0.18, type: "sine", gain: 0.04 });
       }
-      // minimal: intentionally silent - the click blip alone is enough there
+      // minimal: intentionally silent - the click sound alone is enough there
     },
     setMuted(value) {
       muted = value;
