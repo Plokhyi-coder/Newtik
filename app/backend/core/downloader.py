@@ -29,14 +29,20 @@ logger = logging.getLogger("newtik.downloader")
 
 ProgressCallback = Callable[[int, str], None]
 
-# YouTube's default ("web") player client needs a JS interpreter to solve its
-# signature/throttling obfuscation, which most machines don't have installed
-# (yt-dlp logs a warning about it and can hang indefinitely resolving actual
-# stream URLs rather than erroring out cleanly). android/ios/tv clients use
-# unobfuscated or differently-handled URLs that don't need JS at all - listing
-# them first means yt-dlp tries those before ever falling back to the
-# JS-dependent web client.
-_EXTRACTOR_ARGS = {"youtube": {"player_client": ["android", "ios", "tv", "web"]}}
+# Historically this forced player_client=[android,ios,tv,web] to dodge a
+# JS-interpreter dependency in yt-dlp's default ("web") client. That's now
+# actively counter-productive: YouTube has since restricted android (SABR-only,
+# no direct URL), ios (requires a PO token we don't provide) and tv (DRM) to the
+# point where none of those 4 clients reliably yield usable formats any more -
+# which silently starved every quality preset down to whatever scraps of a
+# low-res format survived, regardless of the resolution cap below.
+# yt-dlp itself now auto-selects a client set tailored to whether a JS runtime
+# is available (falling back to 'android_vr' alone when it isn't - see
+# _DEFAULT_JSLESS_CLIENTS in yt_dlp's youtube extractor) and that selection is
+# actively updated by yt-dlp's maintainers as YouTube's restrictions change.
+# Leaving extractor_args empty lets that logic run instead of freezing our own
+# guess in place, which would only get more wrong over time.
+_EXTRACTOR_ARGS: dict = {}
 
 # Hard ceiling on the whole download call. A range-limited, resolution-capped
 # clip should never legitimately take this long - this exists purely so a
