@@ -183,10 +183,26 @@ def _run_job(state: JobState, request: JobCreateRequest, title: str) -> None:
             request.source_url,
             DOWNLOADS_DIR,
             job_id,
-            request.time_range,
             on_progress=lambda pct, msg: _push_progress(state, JobStage.DOWNLOAD, pct, msg),
             quality=request.quality.value,
         )
+
+        # yt-dlp always fetches the full source now (see downloader.py's
+        # docstring - its own range-limited download crashed on a real Windows
+        # ffmpeg install) - so the user's selected trim range is applied here,
+        # locally, as a plain stream-copy cut before anything else touches the
+        # file. cut_by_time()/highlight_scorer both then operate on this
+        # already-trimmed file exactly as if it were all that was downloaded.
+        time_range = request.time_range
+        has_range = time_range and (time_range.start_sec is not None or time_range.end_sec is not None)
+        if has_range:
+            _push_progress(state, JobStage.DOWNLOAD, 100, "обрезка по выбранному диапазону...")
+            trimmed_path = DOWNLOADS_DIR / f"{job_id}_trimmed.mp4"
+            start = time_range.start_sec or 0.0
+            end = time_range.end_sec or probe_duration(source_path)
+            cutter.cut_segment(source_path, start, end, trimmed_path)
+            source_path.unlink(missing_ok=True)
+            source_path = trimmed_path
 
         scores: dict[str, float] = {}
         if request.smart_cut_enabled:

@@ -1,16 +1,21 @@
-"""yt-dlp wrapper: metadata lookup and range-limited download.
+"""yt-dlp wrapper: metadata lookup and full-source download.
 
-Only downloads the requested time range when one is given, via yt-dlp's
-download_ranges (equivalent of --download-sections). Deliberately does NOT
-use force_keyframes_at_cuts: that flag makes yt-dlp re-encode the section
-locally via ffmpeg to land exactly on the requested boundary, which for a
-long/high-res source can mean several GB of RAM and 100% CPU for a very
-long time with zero progress feedback (yt-dlp's progress_hooks only cover
-the actual network download, not this postprocessing step) - indistinguishable
-from a hang. cutter.py already re-cuts precisely from whatever we download
-here, so a download boundary that's merely "close" (snapped to the nearest
-keyframe, typically within a couple of seconds) costs nothing - the final
-clip timing is unaffected.
+Always downloads the whole source video - deliberately does NOT use yt-dlp's
+download_ranges/--download-sections. That looked like a nice bandwidth
+optimization, but yt-dlp hardcodes routing ANY section-limited download
+through its ffmpeg-based external downloader (see get_suitable_downloader in
+yt_dlp/downloader/__init__.py: section_start/section_end always wins over the
+native HTTP downloader, no config can override it), which invokes the
+system's ffmpeg with the raw CDN URL and headers as command-line arguments.
+That crashed outright on a real Windows install ("ffmpeg exited with code
+<garbage>", instantly, every single time) - a known fragile combination
+(very long signed CDN URLs / header passing over the OS command line).
+task_queue.py does its own local trim (a plain, controlled ffmpeg -ss/-t
+stream-copy, same shape as cutter.py's own cuts) right after this returns,
+so the end result for the user is identical - it just costs extra bandwidth
+for long sources instead of letting yt-dlp download only the needed range.
+Also deliberately does NOT use force_keyframes_at_cuts for the same "no
+naked ffmpeg re-encode of a long/high-res source" reasoning as before.
 """
 from __future__ import annotations
 
@@ -21,10 +26,9 @@ from pathlib import Path
 from typing import Callable
 
 import yt_dlp
-from yt_dlp.utils import download_range_func
 
 from backend.core.ffmpeg_utils import probe_resolution
-from backend.models.schemas import TimeRange, VideoMetadata
+from backend.models.schemas import VideoMetadata
 
 logger = logging.getLogger("newtik.downloader")
 
@@ -154,12 +158,12 @@ def download_video(
     url: str,
     dest_dir: Path,
     job_id: str,
-    time_range: TimeRange | None = None,
     on_progress: ProgressCallback | None = None,
     quality: str | None = None,
 ) -> Path:
-    """Downloads `url` into dest_dir/{job_id}.mp4, optionally limited to time_range
-    and capped to a resolution matching `quality` (fast/medium/detailed)."""
+    """Downloads the full source video into dest_dir/{job_id}.mp4, capped to a
+    resolution matching `quality` (fast/medium/detailed). Any time-range trim
+    the user picked is applied afterward by task_queue.py, not here."""
     dest_dir.mkdir(parents=True, exist_ok=True)
     outtmpl = str(dest_dir / f"{job_id}.%(ext)s")
 
@@ -205,20 +209,8 @@ def download_video(
         **_NETWORK_OPTS,
     }
 
-    has_range = time_range and (time_range.start_sec is not None or time_range.end_sec is not None)
-    if has_range:
-        start = time_range.start_sec or 0
-        end = time_range.end_sec  # None means "to the end" - yt-dlp accepts that
-        ydl_opts["download_ranges"] = download_range_func(None, [(start, end)])
-        # No force_keyframes_at_cuts here on purpose - see the module
-        # docstring. The section boundary lands on the nearest keyframe
-        # instead of exactly on start/end, which cutter.py's own re-cut
-        # absorbs without any visible effect on the final clip.
-
     logger.info(
-        "Starting yt-dlp download: quality=%s range=%s format=%s",
-        quality, (time_range.start_sec, time_range.end_sec) if has_range else "full video",
-        ydl_opts["format"],
+        "Starting yt-dlp download: quality=%s format=%s", quality, ydl_opts["format"],
     )
 
     def _do_download() -> None:
