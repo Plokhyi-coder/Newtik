@@ -60,12 +60,16 @@ _EXTRACTOR_ARGS: dict = {}
 # winget; this just tells yt-dlp to look for it.
 _JS_RUNTIMES = {"deno": {}}
 
-# Hard ceiling on the whole download call. A range-limited, resolution-capped
-# clip should never legitimately take this long - this exists purely so a
-# stuck extraction (JS-runtime issues, YouTube-side weirdness, ...) fails
-# loudly with a clear, actionable error instead of hanging the job forever
-# with no way to recover short of restarting the app.
-_DOWNLOAD_TIMEOUT_SEC = 300
+# Hard ceiling on the whole download call. This used to guard a range-limited
+# clip download, where 300s was already generous - but download_video() now
+# always fetches the FULL source (see its docstring: section-limited download
+# crashes ffmpeg on Windows), which for a long source at "detailed" (up to
+# 2160p/4K) quality can legitimately be several GB and take well over 5
+# minutes on an ordinary home connection. This exists to catch a genuinely
+# stuck extraction (JS-runtime issues, YouTube-side weirdness, ...), not to
+# second-guess a real, if slow, transfer - so it's set high enough that only
+# an actual hang trips it.
+_DOWNLOAD_TIMEOUT_SEC = 1800
 
 # yt-dlp's own retry/warning messages otherwise vanish entirely under quiet=True,
 # which made a real network stall look like a silent, undiagnosable hang - this
@@ -175,18 +179,29 @@ def download_video(
     # time, indistinguishable from being genuinely stuck - this heartbeat
     # gives the user something that visibly moves instead.
     hook_fired = threading.Event()
+    last_logged_pct = -1
 
     def hook(d: dict) -> None:
+        nonlocal last_logged_pct
         hook_fired.set()
-        if not on_progress:
-            return
         if d["status"] == "downloading":
             total = d.get("total_bytes") or d.get("total_bytes_estimate")
             downloaded = d.get("downloaded_bytes", 0)
             pct = int(downloaded / total * 100) if total else 0
-            on_progress(pct, "видео...")
+            # Throttled to every 10% - this is what future bad-quality/hang
+            # reports need to tell "genuinely slow, real transfer, X% in Ys"
+            # apart from "stuck at 0%", instead of relying on whatever the UI
+            # happened to show at the moment of a screenshot.
+            if pct >= last_logged_pct + 10 or (pct == 100 and last_logged_pct != 100):
+                last_logged_pct = pct
+                mb = f"{downloaded / 1_048_576:.0f}"
+                total_mb = f"{total / 1_048_576:.0f}" if total else "?"
+                logger.info("Download progress: %s%% (%s/%s MB)", pct, mb, total_mb)
+            if on_progress:
+                on_progress(pct, "видео...")
         elif d["status"] == "finished":
-            on_progress(100, "завершено, объединение потоков...")
+            if on_progress:
+                on_progress(100, "завершено, объединение потоков...")
 
     def _heartbeat() -> None:
         waited = 0
