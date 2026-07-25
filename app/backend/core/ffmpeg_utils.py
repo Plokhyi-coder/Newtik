@@ -65,6 +65,28 @@ def probe_duration(path: Path) -> float:
     return float(data["format"]["duration"])
 
 
+def probe_resolution(path: Path) -> tuple[int, int] | None:
+    """(width, height) of the first video stream, or None if it can't be read.
+
+    Used purely for diagnostics - logging what was actually downloaded/produced,
+    since "I picked the highest quality setting" and "yt-dlp actually fetched a
+    high-res stream" are two different things a support log can now confirm."""
+    check_ffmpeg_available()
+    try:
+        result = subprocess.run(
+            [
+                "ffprobe", "-v", "error", "-select_streams", "v:0",
+                "-show_entries", "stream=width,height",
+                "-of", "json", str(path),
+            ],
+            capture_output=True, text=True, check=True,
+        )
+        stream = json.loads(result.stdout)["streams"][0]
+        return int(stream["width"]), int(stream["height"])
+    except (subprocess.CalledProcessError, KeyError, IndexError, ValueError):
+        return None
+
+
 def run_ffmpeg(args: list[str]) -> None:
     check_ffmpeg_available()
     cmd = ["ffmpeg", "-y", *args]

@@ -22,6 +22,7 @@ from typing import Callable
 import yt_dlp
 from yt_dlp.utils import download_range_func
 
+from backend.core.ffmpeg_utils import probe_resolution
 from backend.models.schemas import TimeRange, VideoMetadata
 
 logger = logging.getLogger("newtik.downloader")
@@ -214,4 +215,12 @@ def download_video(
         if not candidates:
             raise DownloadError("Файл после скачивания не найден на диске.")
         result = candidates[0]
+
+    # Confirms what actually landed on disk, independent of what we asked
+    # for - the deciding evidence if a user reports bad quality again: this
+    # line tells us whether yt-dlp really fetched a high-res stream or
+    # quietly fell back to something lower (e.g. the source has no format
+    # above 720p at all, which no setting here can work around).
+    resolution = probe_resolution(result)
+    logger.info("Download finished: %s (resolution=%s)", result.name, resolution or "unknown")
     return result
