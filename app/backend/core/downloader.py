@@ -15,6 +15,7 @@ clip timing is unaffected.
 from __future__ import annotations
 
 import logging
+import threading
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from pathlib import Path
 from typing import Callable
@@ -162,7 +163,17 @@ def download_video(
     dest_dir.mkdir(parents=True, exist_ok=True)
     outtmpl = str(dest_dir / f"{job_id}.%(ext)s")
 
+    # Resolving the actual stream URL - signature/throttling challenges,
+    # picking a format - happens before yt-dlp's progress_hooks ever fire, and
+    # can legitimately take anywhere from a couple of seconds to a couple of
+    # minutes depending on the network and YouTube's mood. Without some signal
+    # during that window, the UI just sits frozen on "начало..." the whole
+    # time, indistinguishable from being genuinely stuck - this heartbeat
+    # gives the user something that visibly moves instead.
+    hook_fired = threading.Event()
+
     def hook(d: dict) -> None:
+        hook_fired.set()
         if not on_progress:
             return
         if d["status"] == "downloading":
@@ -172,6 +183,14 @@ def download_video(
             on_progress(pct, "видео...")
         elif d["status"] == "finished":
             on_progress(100, "завершено, объединение потоков...")
+
+    def _heartbeat() -> None:
+        waited = 0
+        interval = 8
+        while waited < _DOWNLOAD_TIMEOUT_SEC and not hook_fired.wait(timeout=interval):
+            waited += interval
+            if on_progress:
+                on_progress(0, f"получение ссылки на видео... ({waited}с)")
 
     ydl_opts: dict = {
         "format": _format_selector(quality),
@@ -213,6 +232,8 @@ def download_video(
     # the user instead of sitting frozen indefinitely.
     executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="newtik-ytdlp")
     future = executor.submit(_do_download)
+    heartbeat_thread = threading.Thread(target=_heartbeat, daemon=True)
+    heartbeat_thread.start()
     try:
         future.result(timeout=_DOWNLOAD_TIMEOUT_SEC)
     except FutureTimeoutError as exc:
@@ -227,6 +248,8 @@ def download_video(
         raise DownloadError(f"Не удалось скачать видео (недоступно/приватное?): {exc}") from exc
     else:
         executor.shutdown(wait=False)
+    finally:
+        hook_fired.set()  # let the heartbeat thread exit promptly either way
 
     result = dest_dir / f"{job_id}.mp4"
     if not result.exists():

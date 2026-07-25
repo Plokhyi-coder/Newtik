@@ -3,6 +3,13 @@ uvicorn[standard]>=0.30
 pydantic>=2.7
 pywebview>=5.2
 yt-dlp>=2024.8.6
+# Ships the actual YouTube signature/"n"-challenge solver script that a JS
+# runtime (deno, see start.bat) executes. Without this installed, yt-dlp
+# only knows how to *fetch* that script from GitHub/NPM at runtime, which is
+# disabled by default (requires --remote-components) - so JS challenges kept
+# silently failing even with deno itself working correctly. Installing this
+# package makes the script available locally, no runtime fetch needed.
+yt-dlp-ejs>=0.8.0
 python-multipart>=0.0.9
 send2trash>=1.8
 plyer>=2.1
