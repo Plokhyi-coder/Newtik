@@ -74,16 +74,21 @@ class DownloadError(RuntimeError):
     """Raised for user-facing download failures (private/unavailable video, no network, ...)."""
 
 
-# The final export is always scaled to a fixed 1080x1920 canvas (see
-# overlay.py), so downloading source resolution above what that needs is
-# pure waste - it slows the download and buys zero visible quality in the
-# output. Capping this is also the main lever for the "Быстрый" quality
-# preset to actually mean "faster" - previously it only changed the final
-# encode preset/CRF, not what got downloaded in the first place.
+# The final export is a 1080x1920 vertical crop of the source (see overlay.py),
+# NOT a plain resize - and cropping a 16:9 frame down to a 9:16 slice keeps
+# only `source_height * 9/16` px of width. A 1080p (1920x1080) source is
+# therefore cropped to a strip just ~607px wide, which then has to be
+# *upscaled* ~1.8x to fill the 1080px-wide output - producing exactly the
+# soft/blocky look users report even on the "highest" setting. Avoiding any
+# upscale in that crop needs source_height >= 1920 (i.e. true 4K/2160p,
+# since 1920*9/16 = 1080), which is why "detailed" caps at 2160 and not some
+# lower "good enough" number - anything less always upscales in the crop
+# regardless of encode CRF. "fast"/"medium" intentionally still cap lower as
+# a real speed/size trade-off, accepting that softness.
 _DOWNLOAD_HEIGHT_CAP = {
     "fast": 720,
-    "medium": 1080,
-    "detailed": 1440,
+    "medium": 1440,
+    "detailed": 2160,
 }
 
 

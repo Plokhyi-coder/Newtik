@@ -100,7 +100,7 @@ def apply_text_overlay(
     crop_x_expr = f"(iw-{crop_w})/2*(1+({shift}))" if shift else f"(iw-{crop_w})/2"
     filters = [
         f"crop='{crop_w}':'{crop_h}':x='{crop_x_expr}':y='(ih-{crop_h})/2'",
-        f"scale={TARGET_W}:{TARGET_H}",
+        f"scale={TARGET_W}:{TARGET_H}:flags=lanczos",
     ]
     if variation and variation.eq:
         filters.append(f"eq={variation.eq}")
