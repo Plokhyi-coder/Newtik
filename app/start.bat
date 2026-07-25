@@ -100,7 +100,47 @@ if "!SKIP_INSTALL!"=="1" (
     if defined NEW_HASH echo !NEW_HASH!>"%REQ_HASH_FILE%"
 )
 
-REM --- Step 5: allow inbound connections on the app port so the QR
+REM --- Step 5: make sure a JS runtime (deno) is available for yt-dlp ---
+REM     YouTube requires solving a JS-based signature/throttling challenge for
+REM     its normal (best-quality) client. Without any JS runtime, yt-dlp falls
+REM     back to a single, more limited client - noticeably capping video
+REM     quality/reliability regardless of the quality preset chosen in the app.
+REM     Deno is a small (~30 MB), single-binary, no-dependency runtime yt-dlp
+REM     already knows how to use automatically once it's on PATH.
+where deno >nul 2>nul
+if %errorlevel%==0 (
+    echo [OK] deno found in PATH - full video quality available.
+) else (
+    echo [..] deno not found in PATH, looking for a WinGet install...
+    set "DENO_EXE="
+    for /f "delims=" %%F in ('where /r "%LOCALAPPDATA%\Microsoft\WinGet\Packages" deno.exe 2^>nul') do (
+        set "DENO_EXE=%%F"
+    )
+
+    if defined DENO_EXE (
+        for %%D in ("!DENO_EXE!") do set "DENO_BIN=%%~dpD"
+        echo [OK] Found deno at: !DENO_BIN!
+        set "PATH=%PATH%;!DENO_BIN!"
+    ) else (
+        echo [..] deno not installed yet. Installing via winget, this downloads ~30 MB...
+        winget install --id=DenoLand.Deno -e --accept-source-agreements --accept-package-agreements >nul 2>nul
+        set "DENO_EXE="
+        for /f "delims=" %%F in ('where /r "%LOCALAPPDATA%\Microsoft\WinGet\Packages" deno.exe 2^>nul') do (
+            set "DENO_EXE=%%F"
+        )
+        if defined DENO_EXE (
+            for %%D in ("!DENO_EXE!") do set "DENO_BIN=%%~dpD"
+            set "PATH=%PATH%;!DENO_BIN!"
+            echo [OK] deno ready for this session at: !DENO_BIN!
+        ) else (
+            echo [!!] Could not install deno automatically - video quality may
+            echo      be limited. Install it manually from https://deno.com
+            echo      and re-run this script, or ignore this if quality is fine.
+        )
+    )
+)
+
+REM --- Step 6: allow inbound connections on the app port so the QR
 REM     phone-transfer page is reachable from other devices on the Wi-Fi.
 REM     Windows Firewall blocks this by default, which makes the QR code
 REM     scan fine but the page never load. Adding the rule needs admin
@@ -120,7 +160,7 @@ if not %errorlevel%==0 (
     echo [OK] Firewall rule already present.
 )
 
-REM --- Step 6: launch the app ---
+REM --- Step 7: launch the app ---
 echo.
 echo [OK] Everything is ready. Launching Newtik...
 echo.

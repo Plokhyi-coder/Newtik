@@ -44,6 +44,17 @@ ProgressCallback = Callable[[int, str], None]
 # guess in place, which would only get more wrong over time.
 _EXTRACTOR_ARGS: dict = {}
 
+# yt-dlp's CLI enables the "deno" JS runtime by default (used to solve the
+# signature/"n"-parameter challenges YouTube's non-mobile clients require),
+# but that default lives in the CLI's argument parser, not in YoutubeDL()
+# itself - calling the Python API directly (as we do) with no js_runtimes
+# entry means NO runtime is ever attempted, even if deno is installed and on
+# PATH. That silently forced every download down yt-dlp's "no JS runtime"
+# fallback path (a single, more limited client), regardless of what's
+# actually available on the machine. start.bat installs a portable deno via
+# winget; this just tells yt-dlp to look for it.
+_JS_RUNTIMES = {"deno": {}}
+
 # Hard ceiling on the whole download call. A range-limited, resolution-capped
 # clip should never legitimately take this long - this exists purely so a
 # stuck extraction (JS-runtime issues, YouTube-side weirdness, ...) fails
@@ -121,6 +132,7 @@ def fetch_metadata(url: str) -> VideoMetadata:
     ydl_opts = {
         "quiet": True, "no_warnings": True, "skip_download": True,
         "extractor_args": _EXTRACTOR_ARGS,
+        "js_runtimes": _JS_RUNTIMES,
         "logger": _YtdlpLogger(), **_NETWORK_OPTS,
     }
     try:
@@ -169,6 +181,7 @@ def download_video(
         "quiet": True,
         "no_warnings": True,
         "extractor_args": _EXTRACTOR_ARGS,
+        "js_runtimes": _JS_RUNTIMES,
         "logger": _YtdlpLogger(),
         **_NETWORK_OPTS,
     }

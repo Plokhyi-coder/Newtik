@@ -15,7 +15,7 @@ from datetime import datetime, timedelta, timezone
 
 import yt_dlp
 
-from backend.core.downloader import _EXTRACTOR_ARGS, _NETWORK_OPTS, _YtdlpLogger
+from backend.core.downloader import _EXTRACTOR_ARGS, _JS_RUNTIMES, _NETWORK_OPTS, _YtdlpLogger
 
 logger = logging.getLogger("newtik.channel_parser")
 
@@ -39,6 +39,7 @@ def _flat_opts() -> dict:
         "extract_flat": "in_playlist",
         "playlistend": MAX_VIDEOS,
         "extractor_args": _EXTRACTOR_ARGS,
+        "js_runtimes": _JS_RUNTIMES,
         "logger": _YtdlpLogger(),
         **_NETWORK_OPTS,
     }
@@ -50,6 +51,7 @@ def _video_opts() -> dict:
         "no_warnings": True,
         "skip_download": True,
         "extractor_args": _EXTRACTOR_ARGS,
+        "js_runtimes": _JS_RUNTIMES,
         "logger": _YtdlpLogger(),
         **_NETWORK_OPTS,
     }
